@@ -99,8 +99,14 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 
 def ask_llm(question, context_chunks):
     context = "\n\n".join(context_chunks)
-    prompt = f"Answer the question using ONLY the following context.\n\nContext:\n{context}\n\nQuestion: {question}"
+    prompt = f"""Answer the question using ONLY the following context.
 
+If the context contains conflicting or contradictory information, do not silently pick one - explicitly state that there is a conflict, and briefly describe what each source says.
+
+Context:
+{context}
+
+Question: {question}"""
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}"},

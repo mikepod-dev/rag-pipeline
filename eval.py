@@ -60,6 +60,12 @@ eval_set = [
         "expected_answer": "Should say XJ-4471.",
         "must_contain": ["XJ-4471"]
     },
+    {
+        "question": "How many days per week can employees work remotely?",
+        "expected_source": None,
+        "expected_answer": "Should explicitly flag that there is a conflict between the 2023 (2 days) and 2026 (4 days) policies, not silently pick one.",
+        "must_contain_any": [["conflict"], ["contradict"], ["two policy"], ["2023"]]
+    },
 ]
 def judge_answer(question, expected_answer, actual_answer):
     judge_prompt = f"""You are grading an AI's answer for factual correctness only. Ignore formatting or style.
