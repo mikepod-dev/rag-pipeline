@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from datetime import datetime
 from rank_bm25 import BM25Okapi
 
@@ -158,9 +159,15 @@ if __name__ == "__main__":
             print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits (saved)")
             break
 
+        retrieval_start = time.time()
         query_embedding = model.encode(query).tolist()
         results = collection.query(query_embeddings=[query_embedding], n_results=2)
         retrieved_texts = results["documents"][0]
+        retrieval_time = time.time() - retrieval_start
 
+        generation_start = time.time()
         answer = ask_llm(query, retrieved_texts)
+        generation_time = time.time() - generation_start
+
         print("\nANSWER:", answer)
+        print(f"\n(Retrieval: {retrieval_time:.2f}s | Generation: {generation_time:.2f}s)")
