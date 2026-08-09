@@ -152,12 +152,24 @@ Question: {question}"""
     answer_cache[cache_key] = answer_text
     return answer_text
 
+def validate_query(query):
+    if not query or not query.strip():
+        return False, "Question cannot be empty."
+    if len(query) > 500:
+        return False, "Question is too long (max 500 characters)."
+    return True, None
+
 if __name__ == "__main__":
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
             print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits (saved)")
             break
+
+        is_valid, error_message = validate_query(query)
+        if not is_valid:
+            print(f"\nError: {error_message}")
+            continue
 
         retrieval_start = time.time()
         query_embedding = model.encode(query).tolist()
