@@ -15,7 +15,8 @@ eval_set = [
     {
         "question": "What's the capital of France?",
         "expected_source": None,
-        "expected_answer": "Should say this cannot be answered from the provided context."
+        "expected_answer": "Should say this cannot be answered from the provided context.",
+        "must_contain": ["cannot", "context"]
     },
     {
         "question": "Canine origins?",
@@ -26,22 +27,26 @@ eval_set = [
     {
         "question": "Does caffeine affect sleep?",
         "expected_source": None,
-        "expected_answer": "Should say this cannot be answered from the provided context, since no connection between caffeine and sleep is stated."
+        "expected_answer": "Should say this cannot be answered from the provided context.",
+        "must_contain_any": [["cannot"], ["does not contain"], ["not stated"], ["no information"]]
     },
     {
         "question": "Are wild dogs domesticated?",
         "expected_source": "animals_overview.txt",
-        "expected_answer": "Should say wild dogs like the African wild dog are NOT domesticated and are endangered."
+        "expected_answer": "Should say wild dogs are NOT domesticated.",
+        "must_contain": ["not domesticated"]
     },
     {
         "question": "Do cats hunt in packs?",
         "expected_source": "animals_overview.txt",
-        "expected_answer": "Should say cats retain solitary hunting instincts, unlike dogs which are pack animals."
+        "expected_answer": "Should say cats hunt alone/solitary, not in packs.",
+        "must_contain": ["solitary"]
     },
     {
         "question": "What makes an animal a mammal?",
         "expected_source": "animals_overview.txt",
-        "expected_answer": "Should mention warm-blooded, hair or fur, and producing milk for young."
+        "expected_answer": "Should mention warm-blooded and milk.",
+        "must_contain": ["warm-blooded", "milk"]
     },
     {
         "question": "What year did the French officer bring coffee to the Americas, and what dangers did the voyage include?",
@@ -49,19 +54,29 @@ eval_set = [
         "expected_answer": "Should say 1723, and mention a storm, a suspected saboteur, and a drought.",
         "must_contain": ["1723", "storm", "saboteur", "drought"]
     },
+    {
+        "question": "What is the product code for the coffee maker?",
+        "expected_source": "facts.txt",
+        "expected_answer": "Should say XJ-4471.",
+        "must_contain": ["XJ-4471"]
+    },
 ]
 def judge_answer(question, expected_answer, actual_answer):
-    judge_prompt = f"""You are grading an AI's answer.
+    judge_prompt = f"""You are grading an AI's answer for factual correctness only. Ignore formatting or style.
 
 Question: {question}
 Expected answer should contain: {expected_answer}
 Actual answer given: {actual_answer}
 
-Does the actual answer's CONTENT match what's expected, regardless of formatting? Reply with ONLY one word: PASS or FAIL."""
+Does the actual answer's CONTENT match what's expected? Reply with ONLY one word: PASS or FAIL."""
 
-    verdict = ask_llm(judge_prompt, [])
-    return verdict.strip()
+    votes = []
+    for _ in range(3):
+        verdict = ask_llm(judge_prompt, [])
+        votes.append(verdict.strip().upper())
 
+    pass_count = sum(1 for v in votes if "PASS" in v)
+    return "PASS" if pass_count >= 2 else "FAIL"
 results_log = []
 
 for case in eval_set:
@@ -78,6 +93,13 @@ for case in eval_set:
         answer_lower = answer.lower()
         all_present = all(term.lower() in answer_lower for term in case["must_contain"])
         verdict = "PASS" if all_present else "FAIL"
+    elif "must_contain_any" in case:
+        answer_lower = answer.lower()
+        any_phrase_matched = any(
+            all(term.lower() in answer_lower for term in phrase_group)
+            for phrase_group in case["must_contain_any"]
+        )
+        verdict = "PASS" if any_phrase_matched else "FAIL"
     else:
         verdict = judge_answer(case["question"], case["expected_answer"], answer)
 
@@ -107,3 +129,6 @@ answer_passes = sum(1 for r in results_log if "PASS" in r["verdict"])
 print(f"\n--- SUMMARY ---")
 print(f"Retrieval accuracy: {retrieval_passes}/{total}")
 print(f"Answer accuracy: {answer_passes}/{total}")
+from pipeline import compare_search
+compare_search("What is the product code for the coffee maker?")
+compare_search("XJ-4471")

@@ -82,6 +82,14 @@ def hybrid_search(query, n_results=2):
         "metadatas": [[{"source": all_chunks[i]["source"]} for i in top_indices]]
     }
 
+def compare_search(query, n_results=2):
+    query_embedding = model.encode(query).tolist()
+    semantic_only = collection.query(query_embeddings=[query_embedding], n_results=n_results)
+    hybrid = hybrid_search(query, n_results=n_results)
+
+    print(f"\nQuery: {query}")
+    print("Semantic-only top sources:", [m["source"] for m in semantic_only["metadatas"][0]])
+    print("Hybrid top sources:", [m["source"] for m in hybrid["metadatas"][0]])
 
 from dotenv import load_dotenv
 import requests
