@@ -1,4 +1,5 @@
 import os
+from rank_bm25 import BM25Okapi
 
 def load_documents(folder):
     documents = []
@@ -42,6 +43,9 @@ for chunk in all_chunks:
 print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
 print(all_chunks[0]["embedding"][:5])
 
+tokenized_chunks = [chunk["text"].lower().split() for chunk in all_chunks]
+bm25 = BM25Okapi(tokenized_chunks)
+
 import chromadb
 
 client = chromadb.Client()
@@ -54,6 +58,29 @@ for i, chunk in enumerate(all_chunks):
         documents=[chunk["text"]],
         metadatas=[{"source": chunk["source"]}]
     )
+
+def hybrid_search(query, n_results=2):
+    query_embedding = model.encode(query).tolist()
+    vector_results = collection.query(query_embeddings=[query_embedding], n_results=len(all_chunks))
+
+    tokenized_query = query.lower().split()
+    bm25_scores = bm25.get_scores(tokenized_query)
+
+    combined_scores = {}
+    for i, doc_id in enumerate(vector_results["ids"][0]):
+        idx = int(doc_id)
+        vector_distance = vector_results["distances"][0][i]
+        vector_score = 1 / (1 + vector_distance)
+        bm25_score = bm25_scores[idx]
+        combined_scores[idx] = vector_score + (bm25_score * 0.1)
+
+    ranked = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
+    top_indices = [idx for idx, score in ranked[:n_results]]
+
+    return {
+        "documents": [[all_chunks[i]["text"] for i in top_indices]],
+        "metadatas": [[{"source": all_chunks[i]["source"]} for i in top_indices]]
+    }
 
 
 from dotenv import load_dotenv

@@ -1,4 +1,4 @@
-from pipeline import model, collection, ask_llm
+from pipeline import model, collection, ask_llm, hybrid_search
 
 eval_set = [
     {
@@ -65,8 +65,7 @@ Does the actual answer's CONTENT match what's expected, regardless of formatting
 results_log = []
 
 for case in eval_set:
-    query_embedding = model.encode(case["question"]).tolist()
-    results = collection.query(query_embeddings=[query_embedding], n_results=2)
+    results = hybrid_search(case["question"], n_results=2)
 
     top_source = results["metadatas"][0][0]["source"]
     retrieved_texts = results["documents"][0]
