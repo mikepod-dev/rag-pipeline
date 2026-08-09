@@ -101,11 +101,19 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 
 total_cost = 0.0
 total_calls = 0
+cache_hits = 0
+answer_cache = {}
 
 def ask_llm(question, context_chunks):
-    global total_cost, total_calls
+    global total_cost, total_calls, cache_hits
+
+    cache_key = question.lower().strip()
+    if cache_key in answer_cache:
+        cache_hits += 1
+        return answer_cache[cache_key]
 
     context = "\n\n".join(context_chunks)
+
     prompt = f"""Answer the question using ONLY the following context.
 
 If the context contains conflicting or contradictory information, do not silently pick one - explicitly state that there is a conflict, and briefly describe what each source says.
@@ -140,13 +148,14 @@ Question: {question}"""
     with open("query_log.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
+    answer_cache[cache_key] = answer_text
     return answer_text
 
 if __name__ == "__main__":
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
-            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}")
+            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits (saved)")
             break
 
         query_embedding = model.encode(query).tolist()
