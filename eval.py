@@ -1,10 +1,11 @@
-from pipeline import model, collection, ask_llm, hybrid_search
+from pipeline import model, collection, ask_llm, hybrid_search, hybrid_search_with_rerank, compare_search
 
 eval_set = [
     {
         "question": "How long have dogs been domesticated?",
-        "expected_source": "dog.txt",
-        "expected_answer": "Should say the context doesn't give a specific timeframe, only that dogs were the first animals domesticated."
+        "expected_source": None,
+        "expected_answer": "Should give a real timeframe, roughly 14,000-25,000+ years, citing archaeological or genetic evidence.",
+        "must_contain_any": [["14,000"], ["25,000"]]
     },
     {
         "question": "How many hours do cats sleep?",
@@ -20,15 +21,15 @@ eval_set = [
     },
     {
         "question": "Canine origins?",
-        "expected_source": "dog.txt",
+        "expected_source": None,
         "expected_answer": "Should say dogs were bred from wolves.",
         "must_contain": ["wolves"]
     },
     {
         "question": "Does caffeine affect sleep?",
         "expected_source": None,
-        "expected_answer": "Should say this cannot be answered from the provided context.",
-        "must_contain_any": [["cannot"], ["does not contain"], ["not stated"], ["no information"]]
+        "expected_answer": "Should say yes, caffeine affects/disrupts sleep, based on real evidence now in the context.",
+        "must_contain_any": [["disrupt"], ["delay"], ["affect"]]
     },
     {
         "question": "Are wild dogs domesticated?",
@@ -86,7 +87,7 @@ Does the actual answer's CONTENT match what's expected? Reply with ONLY one word
 results_log = []
 
 for case in eval_set:
-    results = hybrid_search(case["question"], n_results=2)
+    results = hybrid_search_with_rerank(case["question"])
 
     top_source = results["metadatas"][0][0]["source"]
     retrieved_texts = results["documents"][0]
@@ -135,6 +136,4 @@ answer_passes = sum(1 for r in results_log if "PASS" in r["verdict"])
 print(f"\n--- SUMMARY ---")
 print(f"Retrieval accuracy: {retrieval_passes}/{total}")
 print(f"Answer accuracy: {answer_passes}/{total}")
-from pipeline import compare_search
-compare_search("What is the product code for the coffee maker?")
-compare_search("XJ-4471")
+compare_search("What makes an animal a mammal?", n_results=25)

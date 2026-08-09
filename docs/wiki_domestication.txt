@@ -1,0 +1,170 @@
+Domestication is a multi-generational mutualistic relationship in which an animal species, such as humans or leafcutter ants, takes over control and care of another species, such as sheep or fungi, to obtain from them a steady supply of resources, such as meat, milk, or labor. The process is gradual and geographically diffuse, based on trial and error. Domestication affects genes for behavior in animals, making them less aggressive. In plants, domestication affects genes for morphology, such as increasing seed size and stopping the shattering of cereal seedheads. Such changes both make domesticated organisms easier to handle and reduce their ability to survive in the wild.
+Terrestrial vertebrates are the first animals to be domesticated by humans, with the earliest domestication of vertebrates being the domestication of dogs from wolves, who diverged from their wild relatives and developed a commensal relationship with Upper Paleolithic/Mesolithic humans at least 15,000 years ago during the Late Pleistocene. Other animals, including goats, sheep, and cows, were domesticated around 11,000 years ago. Among birds, the chicken was first domesticated in East Asia at least 3,250 years ago. The horse came under domestication around 5,500 years ago in central Asia as a riding animal. For aquatic vertebrates (fish), the Gunditjmara Aboriginal people in southwestern Victoria, Australia may have raised short-finned eels as early as about 4,580 BCE, and the local Budj Bim Cultural Landscape (a World Heritage Site) is one of the oldest known aquaculture sites in the world. Common carp were cultivated in Ancient China as early as 2000–2100 BCE (around 4,000 years BP) as per oral tradition, and the earliest written evidence lies in a Spring and Autumn period monograph by Fan Li called The Classic of Fish Culture, written around 475 BCE (c. 2475 BP). Circumstantial evidence from the Jiahu archaeological site from prehistoric China also speculated possible aquaculture locations dating from 6200 BCE (about 8,200 years BP), where trapped carp were fed with nymphs and silkworm faeces.  Among invertebrates, the silkworm and the western honey bee were domesticated over 5,000 years ago for silk and honey, respectively. The branch of agriculture concerning domesticated animals are known collectively as animal husbandry.
+The domestication of plants began around 13,000–11,000 years ago with cereals such as wheat and barley in the Middle East, alongside crops such as lentil, pea, chickpea, and flax. Beginning around 10,000 years ago, Indigenous peoples in the Americas began to cultivate peanuts, squash, maize, potatoes, cotton, and cassava. Rice was first domesticated in China some 9,000 years ago. In Africa, crops such as sorghum were domesticated. Agriculture developed in some 13 centres around the world, domesticating different crops and animals.
+Three groups of insects, namely ambrosia beetles, leafcutter ants, and fungus-growing termites have independently domesticated species of fungi, on which they feed. In the case of the termites, the relationship is a fully obligate symbiosis on both sides.
+
+
+== Definitions ==
+Domestication (not to be confused with the taming of an individual animal), is from the Latin domesticus, 'belonging to the house'. The term remained loosely defined until the 21st century, when the American archaeologist Melinda A. Zeder defined it as a long-term relationship in which humans take over control and care of another organism to gain a predictable supply of a resource, resulting in mutual benefits. She noted further that it is not synonymous with agriculture since agriculture depends on domesticated organisms but does not automatically result from domestication.
+Michael D. Purugganan notes that domestication has been hard to define, despite the "instinctual consensus" that it means "the plants and animals found under the care of humans that provide us with benefits and which have evolved under our control." In 2025, Kathryn Lord and colleagues proposed a new panspecies definition for domestication by humans, namely "evolution ... in response to an anthropogenic niche". It is the process by which a nonhuman population adapts to an environment created through human activity. Furthermore, "the term 'domestic' should refer solely to those populations that are obligate synanthropes and have adapted to an anthropogenic environment to the extent that only sink populations (in which the death rate is higher than the birth rate) exist outside of that niche."
+
+Domestication syndrome is the suite of phenotypic traits that arose during the initial domestication process and which distinguish domesticated species including crops from their wild ancestors. It can also mean a set of differences now observed in domesticated mammals, not necessarily reflecting the initial domestication process. The changes in mammals include increased docility and tameness, coat coloration, reductions in tooth size, craniofacial morphology, ear and tail form (e.g., floppy ears), estrus cycles, levels of adrenocorticotropic hormone and neurotransmitters, prolongations in juvenile behavior, and reductions in brain size and of particular brain regions.
+Purugganan comments that insects such as termites, ambrosia beetles, and leafcutter ants have domesticated some species of fungi, and notes further that other groups such as weeds and commensals have wrongly been called domesticated. Starting from Zeder's definition, Purugganan proposes a "broad" definition: "a coevolutionary process that arises from a mutualism, in which one species (the domesticator) constructs an environment where it actively manages both the survival and reproduction of another species (the domesticate) in order to provide the former with resources and/or services." He comments that this adds niche construction to the activities of the domesticator.
+
+
+== Cause and timing ==
+
+The domestication of animals and plants by humans was triggered by the climatic and environmental changes that occurred after the peak of the Last Glacial Maximum  and which continue to this present day. These changes made obtaining food by hunting and gathering difficult. The first animal to be domesticated was the dog at least 15,000 years ago. The Younger Dryas 12,900 years ago was a period of intense cold and aridity that put pressure on humans to intensify their foraging strategies but did not favour agriculture. By the beginning of the Holocene 11,700 years ago, a warmer climate and increasing human populations led to small-scale animal and plant domestication and an increased supply of food.
+
+The appearance of the domestic dog in the archaeological record, at least 15,000 years ago, was followed by domestication of livestock and of crops such as wheat and barley, the invention of agriculture, and the transition of humans from foraging to farming in different places and times across the planet. For instance, small-scale trial cultivation of cereals began some 23,000 years ago at the Ohalo II site in Israel.
+In the Fertile Crescent 11,000–10,000 years ago, zooarchaeology indicates that goats, pigs, sheep, and taurine cattle were the first livestock to be domesticated. Two thousand years later, humped zebu cattle were domesticated in what is today Baluchistan in Pakistan. In East Asia 8,000 years ago, pigs were domesticated from wild boar genetically different from those found in the Fertile Crescent. The cat was domesticated in the Fertile Crescent, perhaps 10,000 years ago, from African wildcats, possibly to control rodents that were damaging stored food.
+
+
+== Animals ==
+
+
+=== Desirable traits ===
+
+The domestication of vertebrate animals is the relationship between non-human vertebrates and humans who have an influence on their care and reproduction. In his 1868 book The Variation of Animals and Plants Under Domestication, Charles Darwin recognized the small number of traits that made domestic species different from their wild ancestors. He was also the first to recognize the difference between conscious selective breeding in which humans directly select for desirable traits and unconscious selection, in which traits evolve as a by-product of natural selection or from selection on other traits.
+There is a difference between domestic and wild populations; some of these differences constitute the domestication syndrome, traits presumed essential in the early stages of domestication, while others represent later improvement traits. Domesticated mammals in particular tend to be smaller and less aggressive than their wild counterparts; other common traits are floppy ears, a smaller brain, and a shorter muzzle. Domestication traits are generally fixed within all domesticates, and were selected during the initial episode of domestication of that animal or plant, whereas improvement traits are present only in a proportion of domesticates, though they may be fixed in individual breeds or regional populations.
+Certain animal species, and certain individuals within those species, make better candidates for domestication because of their behavioral characteristics:
+
+The size and organization of their social structure
+The availability and the degree of selectivity in their choice of mates
+The ease and speed with which the parents bond with their young, and the maturity and mobility of the young at birth
+The degree of flexibility in diet and habitat tolerance
+Responses to humans and new environments, including reduced flight response and reactivity to external stimuli.
+
+
+=== Mammals ===
+
+The beginnings of mammal domestication involved a protracted coevolutionary process with multiple stages along different pathways. There are three proposed major pathways that most mammal domesticates followed into domestication:
+
+commensals, adapted to a human niche (e.g., dogs, cats, possibly pigs)
+prey animals sought for food (e.g., sheep, goats, cattle, water buffalo, yak, pig, reindeer, llama and alpaca)
+animals targeted for draft and riding (e.g., horse, donkey, camel).
+Humans did not intend to domesticate mammals from either the commensal or prey pathways, or at least they did not envision a domesticated animal would result from it. In both of those cases, humans became entangled with these species as the relationship between them intensified, and humans' role in their survival and reproduction gradually led to formalized animal husbandry. Although the directed pathway for draft and riding animals proceeded from capture to taming, the other two pathways are not as goal-oriented, and archaeological records suggest that they took place over much longer time frames.
+Unlike other domestic species selected primarily for production-related traits, dogs were initially selected for their behaviors. The dog was domesticated long before other animals, becoming established across Eurasia before the end of the Late Pleistocene era, well before agriculture.
+The archaeological and genetic data suggest that long-term bidirectional gene flow between wild and domestic stocks – such as in donkeys, horses, New and Old World camelids, goats, sheep, and pigs – was common. Human selection for domestic traits likely counteracted the homogenizing effect of gene flow from wild boars into pigs, and created domestication islands in the genome. The same process may apply to other domesticated animals.
+
+The 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals. Domestication involves taming, which has an endocrine component; and parasites can modify endocrine activity and microRNAs. Genes for resistance to parasites might be linked to those for the domestication syndrome; it is predicted that domestic animals are less resistant to parasites than their wild relatives.
+
+
+=== Birds ===
+
+Domesticated birds principally mean poultry, raised for meat and eggs: some Galliformes (chicken, turkey, guineafowl) and Anseriformes (waterfowl: ducks, geese, and swans). Also widely domesticated are cagebirds such as songbirds and parrots; these are kept both for pleasure and for use in research. The domestic pigeon has been used both for food and as a means of communication between far-flung places through the exploitation of the pigeon's homing instinct; research suggests it was domesticated as early as 10,000 years ago. 
+The chicken's wild ancestor is Gallus gallus, the red junglefowl of Southeast Asia. The date and place of chicken domestication has been debated by scientists: fossils in China and Pakistan have been suggested as early chickens at dates as old as 11,000 years ago. A 2020 study of chicken genomes confirmed that domestication occurred in Southeast Asia. Re-examination and dating of bones from many sites identified the earliest probable chicken bones as from central Thailand some 3250 years ago.
+
+
+=== Invertebrates ===
+
+Two insects, the silkworm and the western honey bee, have been domesticated for over 5,000 years, often for commercial use. The silkworm is raised for the silk threads wound around its pupal cocoon; the western honey bee, for honey, and, from the 20th century, for pollination of crops.
+Several other invertebrates have been domesticated, both terrestrial and aquatic, including some such as Drosophila melanogaster fruit flies and the freshwater cnidarian Hydra for research into genetics and physiology. Few have a long history of domestication. Most are used for food or other products such as shellac and cochineal. The phyla involved are Cnidaria, Platyhelminthes (for biological pest control), Annelida, Mollusca, Arthropoda (marine crustaceans as well as insects and spiders), and Echinodermata. While many marine molluscs are used for food, only a few have been domesticated, including squid, cuttlefish and octopus, all used in research on behaviour and neurology. Terrestrial snails in the genera Helix are raised for food. Several parasitic or parasitoidal insects, including the fly Eucelatoria, the beetle Chrysolina, and the wasp Aphytis are raised for biological control. Conscious or unconscious artificial selection has many effects on species under domestication; variability can readily be lost by inbreeding, selection against undesired traits, or genetic drift, while in Drosophila, variability in eclosion time (when adults emerge) has increased.
+
+
+== Plants ==
+
+Humans foraged for wild cereals, seeds, and nuts thousands of years before they were domesticated; wild wheat and barley, for example, were gathered in the Levant at least 23,000 years ago. Neolithic societies in West Asia first began to cultivate and then domesticate some of these plants around 13,000 to 11,000 years ago. The founder crops of the West Asian Neolithic included cereals (emmer, einkorn wheat, barley), pulses (lentil, pea, chickpea, bitter vetch), and flax. Other plants were independently domesticated in 13 centers of origin (subdivided into 24 areas) of the Americas, Africa, and Asia (the Middle East, South Asia, the Far East, and New Guinea and Wallacea); in some thirteen of these regions people began to cultivate grasses and grains. Rice was first cultivated in East Asia. Sorghum was widely cultivated in sub-Saharan Africa, while peanuts, squash, cotton, maize, potatoes, and cassava were domesticated in the Americas.
+Continued domestication was gradual and geographically diffuse – happening in many small steps and spread over a wide area – on the evidence of both archaeology and genetics. It was a process of intermittent trial and error and often resulted in diverging traits and characteristics.
+Whereas domestication of animals impacted most on the genes that controlled behavior, that of plants impacted most on the genes that controlled morphology (seed size, plant architecture, dispersal mechanisms) and physiology (timing of germination or ripening), as in the domestication of wheat. Wild wheat shatters and falls to the ground to reseed itself when ripe, but domesticated wheat stays on the stem for easier harvesting. This change was possible because of a random mutation in the wild populations at the beginning of wheat's cultivation. Wheat with this mutation was harvested more frequently and became the seed for the next crop. Therefore, without realizing it, early farmers selected for this mutation. The result is domesticated wheat, which relies on farmers for its reproduction and dissemination.
+
+
+=== Differences from wild plants ===
+
+Domesticated plants differ from their wild relatives in many ways, including
+
+lack of shattering such as of cereal ears (ripe heads), loss of fruit abscission
+less efficient breeding system (e.g. without normal pollinating organs, making human intervention a requirement), larger seeds with lower success in the wild, or even sterility (e.g. seedless fruits) and therefore only vegetative reproduction
+better palatability (e.g. higher sugar content, reduced bitterness), better smell, and lower toxicity
+edible part larger, e.g. cereal grains or fruits
+edible part more easily separated from non-edible part
+increased number of fruits or grains
+altered color, taste, and texture
+daylength independence
+determinate growth
+reduced or no vernalization
+less seed dormancy.
+Plant defenses against herbivory, such as thorns, spines, and prickles, poison, protective coverings, and sturdiness may have been reduced in domesticated plants. This would make them more likely to be eaten by herbivores unless protected by humans, but there is only weak support for most of this. Farmers did select for reduced bitterness and lower toxicity and for food quality, which likely increased crop palatability to herbivores as to humans. However, a survey of 29 plant domestications found that crops were as well-defended against two major insect pests (beet armyworm and green peach aphid) both chemically (e.g. with bitter substances) and morphologically (e.g. with toughness) as their wild ancestors.
+
+
+=== Changes to plant genome ===
+
+During domestication, crop species undergo intense artificial selection that alters their genomes, establishing core traits that define them as domesticated, such as increased grain size. Comparison of the coding DNA of chromosome 8 in rice between fragrant and non-fragrant varieties showed that aromatic and fragrant rice, including basmati and jasmine, is derived from an ancestral rice domesticate that suffered a deletion in exon 7 which altered the coding for betaine aldehyde dehydrogenase (BADH2). Comparison of the potato genome with that of other plants located genes for resistance to potato blight caused by Phytophthora infestans.
+In coconut, genomic analysis of 10 microsatellite loci (of noncoding DNA) found two episodes of domestication based on differences between individuals in the Indian Ocean and those in the Pacific Ocean.
+The coconut experienced a founder effect, where a small number of individuals with low diversity founded the modern population, permanently losing much of the genetic variation of the wild population. Population bottlenecks which reduced variation throughout the genome at some later date after domestication are evident in crops such as pearl millet, cotton, common bean and lima bean.
+In wheat, domestication involved repeated hybridization and polyploidy. These steps are large and essentially instantaneous changes to the genome and the epigenome, enabling a rapid evolutionary response to artificial selection. Polyploidy increases the number of chromosomes, bringing new combinations of genes and alleles, which in turn enable further changes such as by chromosomal crossover.
+
+
+=== Impact on plant microbiome ===
+The microbiome, the collection of microorganisms inhabiting the surface and internal tissue of plants, is affected by domestication. This includes changes in microbial species composition and diversity. Plant lineage, including speciation, domestication, and breeding, have shaped plant endophytes (phylosymbiosis) in similar patterns as plant genes.
+
+
+== Fungi ==
+
+Several species of fungi have been domesticated for use directly as food, or in fermentation to produce foods and drugs. The cultivated mushroom Agaricus bisporus is widely grown for food. The yeast Saccharomyces cerevisiae have been used for thousands of years to ferment beer and wine, and to leaven bread. Mould fungi including Penicillium are used to mature cheeses and other dairy products, as well as to make drugs such as antibiotics.
+
+
+== Effects ==
+
+
+=== On domestic animals and pathogens ===
+Selection of animals for visible traits may have undesired consequences for the genetics of domestic animals. A side effect of domestication has been zoonotic diseases. For example, cattle have given humanity various viral poxes, measles, and tuberculosis; pigs and ducks have contributed influenza; and horses have brought the rhinoviruses. Many parasites, too, have their origins in domestic animals. Alongside these, the advent of domestication resulted in denser human populations, which provided ripe conditions for pathogens to reproduce, mutate, spread, and eventually find a new host in humans.
+
+
+=== On society ===
+Scholars have expressed widely differing viewpoints on domestication's effects on society. Anarcho-primitivism critiques domestication as destroying the supposed primitive state of harmony with nature in hunter-gatherer societies, and replacing it, possibly violently or by enslavement, with a social hierarchy as property and power emerged. The dialectal naturalist Murray Bookchin has argued that domestication of animals, in turn, meant the domestication of humanity, both parties being unavoidably altered by their relationship with each other. The sociologist David Nibert asserts that the domestication of animals involved violence against animals and damage to the environment. This, in turn, he argues, corrupted human ethics and paved the way for "conquest, extermination, displacement, repression, coerced and enslaved servitude, gender subordination and sexual exploitation, and hunger."
+
+
+=== On diversity ===
+
+Domesticated ecosystems provide food, reduce predator and natural dangers, and promote commerce, but their creation has resulted in habitat alteration or loss, and multiple extinctions commencing in the Late Pleistocene.
+Domestication reduces genetic diversity of the domesticated population, especially of alleles of genes targeted by selection. One reason is a population bottleneck created by artificially selecting the most desirable individuals to breed from. Most of the domesticated strain is then born from just a few ancestors, creating a situation similar to the founder effect. Domesticated populations such as of dogs, rice, sunflowers, maize, and horses have an increased mutation load, as expected in a population bottleneck where genetic drift is enhanced by the small population size. Mutations can also be fixed in a population by a selective sweep. Mutational load can be increased by reduced selective pressure against moderately harmful traits when reproductive fitness is controlled by human management. However, there is evidence against a bottleneck in crops, such as barley, maize, and sorghum, where genetic diversity slowly declined rather than showing a rapid initial fall at the point of domestication. Further, the genetic diversity of these crops was regularly replenished from the natural population. Similar evidence exists for horses, pigs, cows, and goats.
+
+
+== Domestication by non-human animals ==
+
+
+=== By insects ===
+At least three groups of insects, namely ambrosia beetles, leafcutter ants, and fungus-growing termites, have domesticated species of fungi.
+
+
+==== By ambrosia beetles ====
+
+Ambrosia beetles in the weevil subfamilies Scolytinae and Platypodinae excavate tunnels in dead or stressed trees into which they introduce fungal gardens, their sole source of nutrition. After landing on a suitable tree, an ambrosia beetle excavates a tunnel in which it releases its fungal symbiont. The fungus penetrates the plant's xylem tissue, extracts nutrients from it, and concentrates the nutrients on and near the surface of the beetle gallery. Ambrosia fungi are typically poor wood degraders and instead utilize less demanding nutrients. Symbiotic fungi produce and detoxify ethanol, which is an attractant for ambrosia beetles and likely prevents the growth of antagonistic pathogens and selects for other beneficial symbionts. Ambrosia beetles mainly colonise wood of recently dead trees.
+
+
+==== By leafcutter ants ====
+
+The leafcutter ants are any of some 47 species of leaf-chewing ants in the genera Acromyrmex and Atta. The ants carry the discs of leaves that they have cut back to their nest, where they feed the leaf material to the fungi that they tend. Some of these fungi are not fully domesticated: the fungi farmed by Mycocepurus smithii constantly produce spores that are not useful to the ants, which eat fungal hyphae instead. The process of domestication by Atta ants, on the other hand, is complete; it took 30 million years.
+
+
+==== By fungus-growing termites ====
+
+Some 330 fungus-growing termite species of the subfamily Macrotermitinae cultivate Termitomyces fungi to eat; domestication occurred exactly once, 25–40 mya. The fungi, described by Roger Heim in 1942, grow on 'combs' formed from the termites' excreta, dominated by tough woody fragments. The termites and the fungi are both obligate symbionts in the relationship.
+
+
+=== By fishes ===
+Longfin damselfish, Stegastes diencaeus, at Carrie Bow Cay, Belize, domesticate zooplankton called mysid shrimp (Mysidium integrum). The fish farm algae for food, defending their patches of coral reef against intruders except for the shrimps that fertilize the algal crop with their waste and are provided with protection from predators in return.
+
+
+== See also ==
+
+
+== References ==
+
+
+== Sources ==
+Banning, Edward B. (2002). "Aceramic Neolithic". In Peregrine, Peter N.; Ember, Melvin (eds.). Encyclopedia of Prehistory, Volume 8: South and Southwest Asia. Kluwer Academic/Plenum Publishers.
+Diamond, Jared (2005) [1997]. Guns, Germs, and Steel: A short history of everybody for the last 13,000 years. London: Chatto & Windus. ISBN 978-0-09-930278-0.
+Hare, Brian; Woods, Vanessa (August 2020). "Survival of the Friendliest: Natural selection for hypersocial traits enabled Earth's apex species to best Neandertals and other competitors". Scientific American. Vol. 323, no. 2. pp. 58–63.
+Hayden, Brian (2003). "Were luxury foods the first domesticates? Ethnoarchaeological perspectives from Southeast Asia". World Archaeology. 34 (3): 458–469. Bibcode:2003WoArc..34..458H. doi:10.1080/0043824021000026459a. S2CID 162526285.
+Marciniak, Arkadiusz (2005). Placing Animals in the Neolithic: Social Zooarchaeology of Prehistoric Farming Communities. London: UCL Press. ISBN 978-1-84472-092-7.
+Zohary, Daniel; Hopf, Maria; Weiss, Ehud (2012). Domestication of Plants in the Old World (4 ed.). Oxford: Oxford University Press. doi:10.1093/acprof:osobl/9780199549061.001.0001. ISBN 978-0-19-954906-1.
+
+
+== External links ==
+Crop Wild Relative Inventory and Gap Analysis: reliable information source on where and what to conserve ex-situ for crop gene pools of global importance
+Discussion of animal domestication with Jared Diamond
+The Initial Domestication of Cucurbita pepo in the Americas 10,000 Years Ago
+Cattle domestication diagram Archived December 19, 2010, at the Wayback Machine
+Major topic 'domestication': free full-text articles (more than 100 plus reviews) in National Library of Medicine

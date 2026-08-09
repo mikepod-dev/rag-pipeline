@@ -8,13 +8,13 @@ def load_documents(folder):
     documents = []
     for filename in os.listdir(folder):
         filepath = os.path.join(folder, filename)
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
             documents.append({"source": filename, "text": content})
     return documents
 
 docs = load_documents("docs")
-print(docs)
+print(f"Loaded {len(docs)} documents")
 
 def chunk_text(text, chunk_size=100, overlap=30):
     words = text.split()
@@ -32,12 +32,11 @@ for doc in docs:
         all_chunks.append({"source": doc["source"], "text": chunk})
 
 print(f"Total chunks: {len(all_chunks)}")
-for c in all_chunks:
-    print(c)
 
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 for chunk in all_chunks:
     embedding = model.encode(chunk["text"])
@@ -62,27 +61,44 @@ for i, chunk in enumerate(all_chunks):
         metadatas=[{"source": chunk["source"]}]
     )
 
-def hybrid_search(query, n_results=2):
+def hybrid_search(query, n_results=2, k=60):
     query_embedding = model.encode(query).tolist()
     vector_results = collection.query(query_embeddings=[query_embedding], n_results=len(all_chunks))
+    vector_ranking = [int(doc_id) for doc_id in vector_results["ids"][0]]
 
     tokenized_query = query.lower().split()
     bm25_scores = bm25.get_scores(tokenized_query)
+    bm25_ranking = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)
 
-    combined_scores = {}
-    for i, doc_id in enumerate(vector_results["ids"][0]):
-        idx = int(doc_id)
-        vector_distance = vector_results["distances"][0][i]
-        vector_score = 1 / (1 + vector_distance)
-        bm25_score = bm25_scores[idx]
-        combined_scores[idx] = vector_score + (bm25_score * 0.1)
+    rrf_scores = {}
+    for rank, idx in enumerate(vector_ranking):
+        rrf_scores[idx] = rrf_scores.get(idx, 0) + 1 / (rank + k)
+    for rank, idx in enumerate(bm25_ranking):
+        rrf_scores[idx] = rrf_scores.get(idx, 0) + 1 / (rank + k)
 
-    ranked = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
+    ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
     top_indices = [idx for idx, score in ranked[:n_results]]
 
     return {
         "documents": [[all_chunks[i]["text"] for i in top_indices]],
         "metadatas": [[{"source": all_chunks[i]["source"]} for i in top_indices]]
+    }
+
+def hybrid_search_with_rerank(query, n_candidates=25, n_final=2):
+    wide_results = hybrid_search(query, n_results=n_candidates)
+    candidates = wide_results["documents"][0]
+    candidate_sources = wide_results["metadatas"][0]
+
+    pairs = [[query, doc] for doc in candidates]
+    scores = reranker.predict(pairs)
+
+    scored = list(zip(candidates, candidate_sources, scores))
+    scored.sort(key=lambda x: x[2], reverse=True)
+
+    top = scored[:n_final]
+    return {
+        "documents": [[doc for doc, src, score in top]],
+        "metadatas": [[src for doc, src, score in top]]
     }
 
 def compare_search(query, n_results=2):
