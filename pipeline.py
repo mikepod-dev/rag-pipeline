@@ -179,7 +179,7 @@ if __name__ == "__main__":
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
-            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits (saved)")
+            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits")
             break
 
         is_valid, error_message = validate_query(query)
