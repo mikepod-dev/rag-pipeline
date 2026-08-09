@@ -1,4 +1,6 @@
 import os
+import json
+from datetime import datetime
 from rank_bm25 import BM25Okapi
 
 def load_documents(folder):
@@ -97,7 +99,12 @@ import requests
 load_dotenv(override=True)
 api_key = os.getenv("OPENROUTER_API_KEY")
 
+total_cost = 0.0
+total_calls = 0
+
 def ask_llm(question, context_chunks):
+    global total_cost, total_calls
+
     context = "\n\n".join(context_chunks)
     prompt = f"""Answer the question using ONLY the following context.
 
@@ -107,6 +114,7 @@ Context:
 {context}
 
 Question: {question}"""
+
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={"Authorization": f"Bearer {api_key}"},
@@ -116,12 +124,29 @@ Question: {question}"""
         }
     )
     data = response.json()
-    return data["choices"][0]["message"]["content"]
+
+    call_cost = data.get("usage", {}).get("cost", 0)
+    total_cost += call_cost
+    total_calls += 1
+
+    answer_text = data["choices"][0]["message"]["content"]
+
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "question": question,
+        "answer": answer_text,
+        "cost": call_cost
+    }
+    with open("query_log.jsonl", "a") as f:
+        f.write(json.dumps(log_entry) + "\n")
+
+    return answer_text
 
 if __name__ == "__main__":
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
+            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}")
             break
 
         query_embedding = model.encode(query).tolist()
