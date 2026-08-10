@@ -51,7 +51,11 @@ The embedding model correctly judged the coffee content as *less* relevant (lowe
 
 **What the two-stage architecture then proved:** even after RRF, the correct document (`animals_overview.txt`) was still ranked 18th in the fused candidate list — outside a naive top-2 cutoff. Because reranking operates on a wider pool (25 candidates) and reads the actual question against each candidate directly, the cross-encoder correctly promoted it back to #1. This validated the retrieve-wide-then-rerank design under a real failure case, not just in theory.
 
-**One retrieval gap remains open and undocumented as solved:** a short, precise, directly relevant document (`animals_overview.txt`, again) still loses to longer, topically-adjacent-but-less-precise documents on a different question ("Do cats hunt in packs?") — even after reranking. This is flagged as a known limitation, not silently ignored.
+**A third, distinct retrieval bug surfaced on a different question — one relevant document flooding the candidate pool.** Asking "Do cats hunt in packs?" returned nothing useful: `wiki_cat.txt` alone accounted for roughly 19 of the top 25 RRF-ranked candidates, crowding out `animals_overview.txt` (the document that actually answers the question) entirely, even though it ranked 10th in pure semantic search alone. This wasn't the same bug as the coffee-contamination case — it was a *relevant* document dominating the pool through sheer chunk count, not an irrelevant one winning on inflated keyword scores.
+
+**Fix:** added a per-source diversity cap to the retrieval stage — no single document can contribute more than 3 chunks to the candidate pool, regardless of how well its chunks individually score. This guarantees room for multiple genuinely relevant documents to reach the reranker instead of one large document monopolizing the results. After the fix, `animals_overview.txt` reached the candidate pool and the reranker correctly promoted it, resolving the case with a verified-correct final answer.
+
+**Final evaluation result: 11/11 retrieval accuracy, 11/11 answer accuracy** — every case either independently verified correct, or correctly scored as source-agnostic where multiple valid documents legitimately contain the same fact.
 
 ---
 
@@ -98,6 +102,7 @@ The gap between "genuinely the same question" and "genuinely a different questio
 - Distinguishing a real regression from a stale test expectation — several apparent "failures" were the system correctly using better source material than the eval was written against
 - Applying an industry-standard fix (RRF) instead of continuing to hand-tune an ad hoc formula once the root cause was understood
 - Validating a two-stage retrieval architecture with a real failure case, not just a synthetic one
+- Identifying and distinguishing between multiple distinct failure modes in the same retrieval pipeline (irrelevant-document dominance vs. relevant-document over-representation) rather than treating every retrieval miss as the same class of bug
 - Recognizing that LLM-as-judge is itself a probabilistic, sometimes-inconsistent system requiring the same skepticism applied to any other component
 - Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
 
