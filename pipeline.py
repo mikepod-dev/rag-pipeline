@@ -77,7 +77,18 @@ def hybrid_search(query, n_results=2, k=60):
         rrf_scores[idx] = rrf_scores.get(idx, 0) + 1 / (rank + k)
 
     ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-    top_indices = [idx for idx, score in ranked[:n_results]]
+
+    max_per_source = 3
+    source_counts = {}
+    top_indices = []
+    for idx, score in ranked:
+        source = all_chunks[idx]["source"]
+        if source_counts.get(source, 0) >= max_per_source:
+            continue
+        top_indices.append(idx)
+        source_counts[source] = source_counts.get(source, 0) + 1
+        if len(top_indices) >= n_results:
+            break
 
     return {
         "documents": [[all_chunks[i]["text"] for i in top_indices]],

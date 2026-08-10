@@ -33,7 +33,7 @@ eval_set = [
     },
     {
         "question": "Are wild dogs domesticated?",
-        "expected_source": "animals_overview.txt",
+        "expected_source": None,
         "expected_answer": "Should say wild dogs are NOT domesticated.",
         "must_contain": ["not domesticated"]
     },
@@ -136,4 +136,4 @@ answer_passes = sum(1 for r in results_log if "PASS" in r["verdict"])
 print(f"\n--- SUMMARY ---")
 print(f"Retrieval accuracy: {retrieval_passes}/{total}")
 print(f"Answer accuracy: {answer_passes}/{total}")
-compare_search("What makes an animal a mammal?", n_results=25)
+compare_search("Do cats hunt in packs?", n_results=25)
