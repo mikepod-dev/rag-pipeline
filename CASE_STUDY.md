@@ -1,0 +1,108 @@
+# Building and Debugging a Production-Minded RAG Pipeline
+### A case study in retrieval failures, evaluation discipline, and knowing when to reject your own feature
+
+---
+
+## Summary
+
+I built a retrieval-augmented generation (RAG) system from scratch — hybrid search (BM25 + embeddings), Reciprocal Rank Fusion, cross-encoder reranking, an automated evaluation harness, cost/latency tracking, and caching — then deliberately stress-tested it against a 796-chunk real-world document set. That stress test surfaced a genuine, non-obvious retrieval bug that had been silently possible from the start but only became visible at realistic scale. I also built, rigorously tested, and ultimately **rejected** a semantic caching feature after finding it introduced a silent wrong-answer risk — a decision backed by hard similarity-score evidence, not intuition.
+
+This writeup documents the real engineering arc: what broke, how I diagnosed it, what I measured, and what I chose not to ship.
+
+---
+
+## Architecture
+
+- **Chunking:** word-based with configurable overlap (30 words) to prevent facts from being split across chunk boundaries
+- **Retrieval:** hybrid search combining dense embeddings (`all-MiniLM-L6-v2`) and BM25 keyword search, fused via **Reciprocal Rank Fusion (RRF)**
+- **Reranking:** a cross-encoder (`ms-marco-MiniLM-L-6-v2`) re-scores a wide candidate pool (25) down to the final top-N, correcting cases where first-stage fusion alone misranks results
+- **Generation:** Claude Haiku via OpenRouter, with an explicit instruction to flag contradictions across sources rather than silently resolving them
+- **Evaluation:** an automated harness scoring retrieval accuracy and answer accuracy separately — deterministic keyword checks where possible, majority-vote LLM-as-judge only where genuinely subjective
+- **Production instrumentation:** per-call cost tracking, persistent JSONL query logging, exact-match answer caching, retrieval/generation latency splits, and input validation
+
+---
+
+## Finding 1: A demo that looked perfect (11/11) was never actually tested
+
+The system passed 11/11 on its original evaluation set — three tiny, hand-written documents about dogs, cats, and coffee. That number meant almost nothing. With so few chunks, there was no real retrieval competition; almost any reasonable method would have scored well.
+
+**The fix wasn't code — it was scale.** I pulled 8 real Wikipedia articles (~350,000 characters, chunked into 796 pieces) on topics deliberately chosen to overlap with the existing content — `Dog`, `Wolf`, `Domestication`, `Coffee`, `Caffeine` — specifically to create genuine competition between similar-sounding chunks. This is the condition under which retrieval quality actually gets tested.
+
+Retrieval accuracy immediately dropped from 11/11 to 8/11 under real competitive pressure.
+
+---
+
+## Finding 2: A critical, silent BM25 length-bias bug
+
+One failure stood out: asking **"What makes an animal a mammal?"** returned content from `wiki_coffee.txt` — a completely unrelated document.
+
+I didn't accept the surface symptom. I added targeted debug instrumentation to print the raw vector score, raw BM25 score, and combined score for every candidate chunk, isolating the two competing documents (`animals_overview.txt`, the correct source, vs. `wiki_coffee.txt`, the incorrect one).
+
+**The evidence:**
+
+| Document | Vector score | Raw BM25 score | Combined score |
+|---|---|---|---|
+| `animals_overview.txt` (correct) | 0.531 | 2.450 | **0.776** |
+| `wiki_coffee.txt` chunk (wrong) | 0.364 | 9.225 | **1.286** |
+
+The embedding model correctly judged the coffee content as *less* relevant (lower vector score) — but raw BM25 scores are unbounded and reward term frequency across a document's full length. A 57,000-character article racks up large cumulative BM25 scores on generic words alone, regardless of topical relevance. My original weighting formula (`vector_score + bm25_score * 0.1`) let this length bias dominate.
+
+**The fix:** replaced the ad hoc weighted-sum with **Reciprocal Rank Fusion** — combining *rank positions* from each retrieval method instead of raw, incomparably-scaled scores. This is the standard, robust technique for exactly this problem, and it eliminated the coffee-contamination failure entirely with no further hand-tuning of magic weight constants.
+
+**What the two-stage architecture then proved:** even after RRF, the correct document (`animals_overview.txt`) was still ranked 18th in the fused candidate list — outside a naive top-2 cutoff. Because reranking operates on a wider pool (25 candidates) and reads the actual question against each candidate directly, the cross-encoder correctly promoted it back to #1. This validated the retrieve-wide-then-rerank design under a real failure case, not just in theory.
+
+**One retrieval gap remains open and undocumented as solved:** a short, precise, directly relevant document (`animals_overview.txt`, again) still loses to longer, topically-adjacent-but-less-precise documents on a different question ("Do cats hunt in packs?") — even after reranking. This is flagged as a known limitation, not silently ignored.
+
+---
+
+## Finding 3: The eval harness itself needed hardening — twice
+
+Two separate flaws were found *in the evaluation tooling*, not the RAG system:
+
+1. **Retrieval scoring was stricter than what actually mattered.** The check only verified the #1 retrieved result matched expectations, but the system actually used the top-2 results for generation. A "failing" case turned out to be a correct answer built from a top-2 chunk that just wasn't ranked #1. Fixed by checking whether the expected source appeared *anywhere* in the retrieved set, matching what the LLM actually saw.
+
+2. **LLM-as-judge was measurably inconsistent.** Running the identical eval twice, with no code changes, produced different pass/fail verdicts on the same answers — including one case where the judge's own stated reasoning contradicted its verdict. Rather than trust a single noisy LLM call, I converted the majority of subjective checks into deterministic keyword-based assertions, and added 3-call majority voting for the cases that genuinely couldn't be reduced to keyword matching.
+
+**Net result:** 8 of 11 final eval cases are fully deterministic — instant, free, perfectly reproducible — with only 1 case still relying on (now majority-voted) LLM judgment.
+
+---
+
+## Finding 4: Catching a bug I introduced myself
+
+While hardening the eval harness, I instructed a new `must_contain_any` field be added to support multiple acceptable answer phrasings — but the scoring logic that was supposed to *read* that field was never updated to check for it. The result: the eval silently fell back to the old LLM-judge path with no error, no warning, and no visible sign anything was wrong.
+
+This was caught not by inspecting the code, but by noticing the eval's pass/fail behavior didn't match what the newly-added rule should have produced — then tracing the discrepancy back to its source. It's a concrete example of the exact failure mode that makes AI-assisted development risky if unverified: a plausible-looking instruction can silently do nothing.
+
+---
+
+## Finding 5: Building, testing, and rejecting semantic caching
+
+Exact-match caching (question text → answer) was extended to **semantic caching** — embedding each question and matching against previously-cached questions by cosine similarity, so paraphrased repeats could also hit the cache.
+
+I tested this rigorously rather than assuming it worked:
+
+| Question pair | Relationship | Cosine similarity |
+|---|---|---|
+| "How many hours do cats sleep?" vs. "What's the typical amount of daily sleep for a cat?" | Same meaning, different words | **0.8455** |
+| "How many hours do cats sleep?" vs. "How many hours do dogs sleep?" | Different topic entirely | **0.8149** |
+
+The gap between "genuinely the same question" and "genuinely a different question" was only **0.03** — far too thin a margin to safely threshold. At a permissive setting (0.80), the dogs question returned the cats answer verbatim, with full confidence and no indication of error. At a safe setting (0.93+), the feature never fired on real paraphrases at all, providing no benefit.
+
+**Decision: rejected and removed**, with the finding documented rather than silently ignored. A feature that can't clear a safety bar shouldn't ship, even if it "mostly" works — and the reasoning behind that call, backed by concrete similarity scores, is itself the more valuable artifact than the feature would have been.
+
+---
+
+## What this project demonstrates
+
+- Diagnosing failures by separating retrieval correctness from generation correctness, rather than treating "wrong answer" as one undifferentiated category
+- Distinguishing a real regression from a stale test expectation — several apparent "failures" were the system correctly using better source material than the eval was written against
+- Applying an industry-standard fix (RRF) instead of continuing to hand-tune an ad hoc formula once the root cause was understood
+- Validating a two-stage retrieval architecture with a real failure case, not just a synthetic one
+- Recognizing that LLM-as-judge is itself a probabilistic, sometimes-inconsistent system requiring the same skepticism applied to any other component
+- Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
+
+---
+
+## Stack
+
+Python · ChromaDB · `sentence-transformers` (bi-encoder + cross-encoder) · `rank-bm25` · OpenRouter (Claude Haiku) · git
