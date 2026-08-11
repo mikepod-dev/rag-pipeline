@@ -96,7 +96,19 @@ The gap between "genuinely the same question" and "genuinely a different questio
 
 ---
 
-## What this project demonstrates
+## Finding 6: Agentic RAG — a self-correcting loop, and a real limit of self-grading
+
+Building on the plain/hybrid retrieval pipeline, I implemented an agentic loop: retrieve → generate → self-grade the answer → if insufficient, rewrite the query and retry (up to 2 additional attempts). This is a meaningfully different architecture from one-shot RAG — the system evaluates its own output and can actively recover from a bad first attempt rather than returning it directly.
+
+**First iteration of the self-grader failed immediately.** Testing against a deliberately colloquial, oddly-phrased question ("What's the weird theory about bugs inside animals causing them to become pets?" — referring to a real hypothesis in the source material, the parasite-mediated domestication theory), the grader marked a clear non-answer ("I cannot answer this question... does not contain any theory") as `Sufficient: True`. The grader was judging the *surface shape* of the answer (does it look like a refusal) rather than the *cause* — it had no way to distinguish a correct refusal (information genuinely absent) from an incorrect one (retrieval simply grabbed the wrong content), because it never saw what was actually retrieved.
+
+**Fix, attempt one:** gave the grader visibility into the retrieved context alongside the answer, and asked it to judge whether the retrieved content looked topically related to the question before accepting a refusal as valid.
+
+**This fix revealed a second, more subtle limitation.** On retry, retrieval pulled genuinely topically-adjacent content (theories of *why humans keep pets* — evolutionary advantage, empathy side-effects) instead of the actually-correct source (the parasite-mediated domestication hypothesis, in a different document). The answer correctly reported this content didn't match and correctly refused — and the grader, now able to see the retrieved context, judged it as a legitimate, good-faith refusal, since the content genuinely was on-topic. **A near-miss that retrieves the right general subject but the wrong specific document is functionally indistinguishable, to a self-grader, from a case where the information is genuinely absent** — both present as "reasonable-looking context, correct-sounding refusal."
+
+**Honest conclusion:** self-grading meaningfully improves on never checking at all, and successfully catches obviously bad retrieval. But it cannot reliably solve the harder case — a plausible-but-wrong retrieval — without a fundamentally different signal than "does this look reasonable," since a near-miss and a genuine absence can look identical from the answer's perspective. This is documented as a known, real limitation of the technique as implemented, not silently smoothed over.
+
+
 
 - Diagnosing failures by separating retrieval correctness from generation correctness, rather than treating "wrong answer" as one undifferentiated category
 - Distinguishing a real regression from a stale test expectation — several apparent "failures" were the system correctly using better source material than the eval was written against
@@ -105,6 +117,7 @@ The gap between "genuinely the same question" and "genuinely a different questio
 - Identifying and distinguishing between multiple distinct failure modes in the same retrieval pipeline (irrelevant-document dominance vs. relevant-document over-representation) rather than treating every retrieval miss as the same class of bug
 - Recognizing that LLM-as-judge is itself a probabilistic, sometimes-inconsistent system requiring the same skepticism applied to any other component
 - Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
+- Recognizing when an added safeguard (self-grading) solves one failure mode but not a harder, structurally different one, and documenting that boundary explicitly rather than presenting a partial fix as complete
 
 ---
 
