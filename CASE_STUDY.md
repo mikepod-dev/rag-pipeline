@@ -108,6 +108,27 @@ Building on the plain/hybrid retrieval pipeline, I implemented an agentic loop: 
 
 **Honest conclusion:** self-grading meaningfully improves on never checking at all, and successfully catches obviously bad retrieval. But it cannot reliably solve the harder case — a plausible-but-wrong retrieval — without a fundamentally different signal than "does this look reasonable," since a near-miss and a genuine absence can look identical from the answer's perspective. This is documented as a known, real limitation of the technique as implemented, not silently smoothed over.
 
+---
+
+## Finding 7: Graph RAG — a validated proof of concept, with a scope decision made explicit
+
+To address multi-hop relationship questions (e.g., "what animals are descended from wolves") that plain vector/keyword retrieval structurally cannot answer well — since it retrieves isolated chunks with no concept of how entities relate to each other — I built a graph-based retrieval layer using `networkx`: an LLM extracts `(subject, relationship, object)` triples from document chunks, which are assembled into a directed graph that can be traversed for multi-hop connections.
+
+**Built and validated on a 15-chunk sample** (not the full 796-chunk set — a deliberate scoping decision, explained below):
+
+- Extraction worked: 15 chunks yielded 133 distinct entities and 112 relationships, correctly capturing real facts (`dogs --[descended_from]--> wolves`, `mammals --[characterized_by]--> hair or fur`)
+- **Found and fixed a real entity-normalization bug**: the same real-world entity ("Dogs" vs. "dogs" vs. "Domesticated Mammals") was initially extracted with inconsistent capitalization, creating duplicate nodes for the same concept. A query for `graph.out_degree('Domesticated Mammals')` silently returned an empty list rather than erroring — the node didn't exist under that exact casing, and the failure was invisible rather than crashing. Fixed by lowercasing and stripping all entity names before adding them to the graph.
+- Single-hop traversal (`dogs --[X]--> Y`) worked correctly and returned real, correct connections.
+- **Tested for 2-hop traversal and found none — correctly, not as a bug.** Neither "wolves" nor "domesticated mammals" had any outgoing edges in the 15-chunk sample, meaning no entity appeared as *both* the target of one relationship and the source of another within that sample. This was verified directly (`out_degree` genuinely returning `0` for a confirmed-existing node) rather than assumed.
+
+**Honest scoping decision:** proving genuine multi-hop reasoning would require either running full extraction across all 796 chunks (796 real LLM calls — meaningful, deliberate cost) or a smaller, targeted sample specifically including a document like `wiki_wolf.txt` where "wolves" would plausibly appear as a subject. Given this was a late-session proof-of-concept, I chose to validate the *mechanism* (extraction, normalization, traversal all work correctly) rather than scale to prove the *specific capability* (multi-hop answers) — a deliberate, documented scope boundary rather than an unstated limitation.
+
+**What a production version would require:** full-corpus extraction, a more robust entity-resolution step (exact-match lowercasing is a first pass; real systems typically need embedding-based entity linking to merge near-duplicates like "Dog" and "Canis familiaris"), and a hybrid query router that sends relationship-style questions to the graph and factual-lookup questions to the existing hybrid search + reranking pipeline.
+
+---
+
+## What this project demonstrates
+
 
 
 - Diagnosing failures by separating retrieval correctness from generation correctness, rather than treating "wrong answer" as one undifferentiated category
@@ -118,6 +139,7 @@ Building on the plain/hybrid retrieval pipeline, I implemented an agentic loop: 
 - Recognizing that LLM-as-judge is itself a probabilistic, sometimes-inconsistent system requiring the same skepticism applied to any other component
 - Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
 - Recognizing when an added safeguard (self-grading) solves one failure mode but not a harder, structurally different one, and documenting that boundary explicitly rather than presenting a partial fix as complete
+- Making a deliberate, disclosed scoping decision (validating a mechanism on a sample vs. proving a capability at full scale) rather than either overclaiming results or silently limiting scope without saying so
 
 ---
 
