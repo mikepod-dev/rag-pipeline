@@ -179,6 +179,57 @@ Question: {question}"""
     answer_cache[cache_key] = answer_text
     return answer_text
 
+def self_grade_answer(question, answer, retrieved_context):
+    context_preview = "\n\n".join(retrieved_context)
+    grade_prompt = f"""You are evaluating whether a RAG system's answer is as good as it could be, given what was actually retrieved.
+
+Question: {question}
+Retrieved context: {context_preview}
+Answer given: {answer}
+
+If the answer says information is missing, check: does the retrieved context actually look unrelated to the question (in which case the refusal is CORRECT and this is SUFFICIENT), or does the context seem like it's on-topic but the answer still failed to use it well (in which case retrieval likely grabbed the wrong specific chunks, and this is INSUFFICIENT - a different search might do better)?
+
+Reply with ONLY one word: SUFFICIENT or INSUFFICIENT."""
+
+    grade = ask_llm(grade_prompt, [])
+    return "SUFFICIENT" in grade.strip().upper()
+
+def rewrite_query(original_question, failed_answer):
+    rewrite_prompt = f"""The following question was asked, but the answer given was insufficient - likely because retrieval didn't find the right information.
+
+Original question: {original_question}
+Insufficient answer: {failed_answer}
+
+Rewrite the question using different words, broader terms, or a more direct phrasing that might retrieve better source material. Reply with ONLY the rewritten question, nothing else."""
+
+    rewritten = ask_llm(rewrite_prompt, [])
+    return rewritten.strip()
+
+def agentic_answer(question, max_retries=2):
+    current_question = question
+    attempts = []
+
+    for attempt in range(max_retries + 1):
+        results = hybrid_search_with_rerank(current_question)
+        retrieved_texts = results["documents"][0]
+        answer = ask_llm(current_question, retrieved_texts)
+
+        is_sufficient = self_grade_answer(question, answer, retrieved_texts)
+        attempts.append({
+            "attempt": attempt + 1,
+            "question_used": current_question,
+            "answer": answer,
+            "sufficient": is_sufficient
+        })
+
+        if is_sufficient:
+            return answer, attempts
+
+        if attempt < max_retries:
+            current_question = rewrite_query(current_question, answer)
+
+    return answer, attempts
+
 def validate_query(query):
     if not query or not query.strip():
         return False, "Question cannot be empty."
