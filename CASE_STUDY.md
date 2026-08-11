@@ -121,9 +121,21 @@ To address multi-hop relationship questions (e.g., "what animals are descended f
 - Single-hop traversal (`dogs --[X]--> Y`) worked correctly and returned real, correct connections.
 - **Tested for 2-hop traversal and found none — correctly, not as a bug.** Neither "wolves" nor "domesticated mammals" had any outgoing edges in the 15-chunk sample, meaning no entity appeared as *both* the target of one relationship and the source of another within that sample. This was verified directly (`out_degree` genuinely returning `0` for a confirmed-existing node) rather than assumed.
 
-**Honest scoping decision:** proving genuine multi-hop reasoning would require either running full extraction across all 796 chunks (796 real LLM calls — meaningful, deliberate cost) or a smaller, targeted sample specifically including a document like `wiki_wolf.txt` where "wolves" would plausibly appear as a subject. Given this was a late-session proof-of-concept, I chose to validate the *mechanism* (extraction, normalization, traversal all work correctly) rather than scale to prove the *specific capability* (multi-hop answers) — a deliberate, documented scope boundary rather than an unstated limitation.
+**Honest scoping decision:** proving genuine multi-hop reasoning would require either running full extraction across all 796 chunks (796 real LLM calls — meaningful, deliberate cost) or a smaller, targeted sample specifically including a document like `wiki_wolf.txt` where "wolves" would plausibly appear as a subject. Given this was a late-session proof-of-concept, I initially validated only the *mechanism* on an untargeted 15-chunk sample.
 
-**What a production version would require:** full-corpus extraction, a more robust entity-resolution step (exact-match lowercasing is a first pass; real systems typically need embedding-based entity linking to merge near-duplicates like "Dog" and "Canis familiaris"), and a hybrid query router that sends relationship-style questions to the graph and factual-lookup questions to the existing hybrid search + reranking pipeline.
+**Follow-up: scaled and targeted the sample, found a second sampling bug, then got a real proof of multi-hop reasoning.** Expanding to a 60-chunk sample explicitly listing `wiki_wolf.txt` as a source still produced zero wolf-related edges — investigation showed the sampling code took the *first* 60 matching chunks in file order, and since `wiki_dog.txt` alone contains dozens of chunks, the cutoff was exhausted before ever reaching `wiki_wolf.txt`. This is the same class of bug as the BM25 length-bias and single-document pool-dominance issues found earlier: one large source silently crowding out another, this time in sampling rather than retrieval. **Fixed by sampling proportionally per source** (10 chunks from each target document, rather than the first N overall) — conceptually the same diversity-cap fix already applied to retrieval, now applied to graph-building.
+
+With wolf-related content genuinely included, the graph produced real, verified multi-hop chains that plain retrieval cannot produce, including a genuine 3-hop connection spanning three separate entities across different source chunks:
+
+```
+dogs --[can_communicate_with]--> humans --[domesticate]--> sheep --[provide]--> meat
+```
+
+No single document chunk states a direct relationship between dogs and sheep — the graph assembled this connection automatically by traversing shared intermediate entities across chunks originating from different documents. This is the concrete capability gap Graph RAG exists to close, demonstrated with a real, inspectable result rather than left as an unproven claim.
+
+**Remaining known limitation:** singular/plural and phrasing variants of the same entity (e.g., "dog" vs. "dogs," "domesticated_from" vs. "domesticated from") are not yet unified, meaning some genuinely-equivalent nodes are still tracked separately. A production version would need a real entity-resolution layer (e.g., embedding-based similarity merging) rather than simple lowercase-and-strip normalization.
+
+**What a full production version would still require:** full-corpus extraction across all 796 chunks, the entity-resolution improvement above, and a hybrid query router that sends relationship-style questions to the graph and factual-lookup questions to the existing hybrid search + reranking pipeline.
 
 ---
 
@@ -139,7 +151,7 @@ To address multi-hop relationship questions (e.g., "what animals are descended f
 - Recognizing that LLM-as-judge is itself a probabilistic, sometimes-inconsistent system requiring the same skepticism applied to any other component
 - Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
 - Recognizing when an added safeguard (self-grading) solves one failure mode but not a harder, structurally different one, and documenting that boundary explicitly rather than presenting a partial fix as complete
-- Making a deliberate, disclosed scoping decision (validating a mechanism on a sample vs. proving a capability at full scale) rather than either overclaiming results or silently limiting scope without saying so
+- Making a deliberate, disclosed scoping decision (validating a mechanism on a sample vs. proving a capability at full scale), then following through to actually prove the capability once time allowed — including finding and fixing a second, related sampling bug (one large source crowding out a smaller one) using the same diversity-cap principle already applied to retrieval
 
 ---
 

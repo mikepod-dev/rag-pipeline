@@ -22,7 +22,13 @@ If no clear relationships exist, reply with an empty list: []"""
 
 graph = nx.DiGraph()
 
-sample_chunks = all_chunks[:15]
+target_sources = ["dog.txt", "wiki_dog.txt", "wiki_wolf.txt", "wiki_cat.txt", "animals_overview.txt", "wiki_domestication.txt"]
+chunks_per_source = 10
+sample_chunks = []
+for source in target_sources:
+    source_chunks = [c for c in all_chunks if c["source"] == source][:chunks_per_source]
+    sample_chunks.extend(source_chunks)
+print(f"Sampling from sources: {target_sources}")
 print(f"Extracting triples from {len(sample_chunks)} sample chunks...")
 
 for i, chunk in enumerate(sample_chunks):
@@ -36,6 +42,14 @@ for i, chunk in enumerate(sample_chunks):
             graph.add_edge(subj, obj, relationship=rel)
 
 print(f"\nGraph built: {graph.number_of_nodes()} entities, {graph.number_of_edges()} relationships")
+
+wolf_chunks_used = [c for c in sample_chunks if c["source"] == "wiki_wolf.txt"]
+print(f"\nActual wiki_wolf.txt chunks in sample: {len(wolf_chunks_used)}")
+
+wolf_related_edges = [(u, v, d) for u, v, d in graph.edges(data=True) if "wolf" in u.lower() or "wolf" in v.lower()]
+print(f"\nAll edges mentioning 'wolf' ({len(wolf_related_edges)} found):")
+for u, v, d in wolf_related_edges[:20]:
+    print(f"  {u} --[{d['relationship']}]--> {v}")
 print("\nSample edges:")
 for u, v, data in list(graph.edges(data=True))[:10]:
     print(f"  {u} --[{data['relationship']}]--> {v}")
@@ -62,7 +76,11 @@ def find_related(entity, max_hops=2):
         except nx.NetworkXNoPath:
             continue
 
-find_related("dogs", max_hops=2)
+find_related("dogs", max_hops=3)
+print("\nOutgoing edges from 'wolves' (rechecking with expanded sample):")
+for u, v, data in graph.out_edges("wolves", data=True):
+    print(f"  {u} --[{data['relationship']}]--> {v}")
+print(f"(wolves now has {graph.out_degree('wolves')} outgoing edges)")
 
 print("\nOutgoing edges from 'wolves':")
 for u, v, data in graph.out_edges("wolves", data=True):
