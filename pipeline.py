@@ -61,7 +61,7 @@ for i, chunk in enumerate(all_chunks):
         metadatas=[{"source": chunk["source"]}]
     )
 
-def hybrid_search(query, n_results=2, k=60):
+def hybrid_search(query, n_results=2, k=60, max_per_source=3):
     query_embedding = model.encode(query).tolist()
     vector_results = collection.query(query_embeddings=[query_embedding], n_results=len(all_chunks))
     vector_ranking = [int(doc_id) for doc_id in vector_results["ids"][0]]
@@ -78,7 +78,6 @@ def hybrid_search(query, n_results=2, k=60):
 
     ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
 
-    max_per_source = 3
     source_counts = {}
     top_indices = []
     for idx, score in ranked:
@@ -95,8 +94,8 @@ def hybrid_search(query, n_results=2, k=60):
         "metadatas": [[{"source": all_chunks[i]["source"]} for i in top_indices]]
     }
 
-def hybrid_search_with_rerank(query, n_candidates=25, n_final=2):
-    wide_results = hybrid_search(query, n_results=n_candidates)
+def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=3):
+    wide_results = hybrid_search(query, n_results=n_candidates, max_per_source=max_per_source)
     candidates = wide_results["documents"][0]
     candidate_sources = wide_results["metadatas"][0]
 

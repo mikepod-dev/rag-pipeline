@@ -45,7 +45,9 @@ I didn't accept the surface symptom. I added targeted debug instrumentation to p
 | `animals_overview.txt` (correct) | 0.531 | 2.450 | **0.776** |
 | `wiki_coffee.txt` chunk (wrong) | 0.364 | 9.225 | **1.286** |
 
-The embedding model correctly judged the coffee content as *less* relevant (lower vector score) — but raw BM25 scores are unbounded and reward term frequency across a document's full length. A 57,000-character article racks up large cumulative BM25 scores on generic words alone, regardless of topical relevance. My original weighting formula (`vector_score + bm25_score * 0.1`) let this length bias dominate.
+The embedding model correctly judged the coffee content as *less* relevant (lower vector score) — but the BM25 scores told a different story.
+
+**Root cause, precisely:** BM25's length-normalization term (`|D| / avgdl`, weighted by `b=0.75`) is designed to penalize documents longer than the corpus average. Because the corpus was uniformly chunked into ~100-word segments with fixed overlap, every chunk's length sits close to the corpus-wide average by construction — collapsing `|D| / avgdl` to approximately 1 for nearly every candidate, regardless of source document. With the normalization term reduced to a near-constant across the index, it stops meaningfully differentiating between chunks, and raw term frequency (`f(q,D)`) becomes the dominant driver of score differences instead. This is visible directly in the debug output: individual `wiki_coffee.txt` chunks ranged from a raw BM25 score of 0.000 to 9.225 — a spread driven by term-frequency saturation within specific chunks, not by document length in the naive whole-article sense. My original weighting formula (`vector_score + bm25_score * 0.1`) let this term-frequency variance dominate the combined score.
 
 **The fix:** replaced the ad hoc weighted-sum with **Reciprocal Rank Fusion** — combining *rank positions* from each retrieval method instead of raw, incomparably-scaled scores. This is the standard, robust technique for exactly this problem, and it eliminated the coffee-contamination failure entirely with no further hand-tuning of magic weight constants.
 
@@ -54,6 +56,8 @@ The embedding model correctly judged the coffee content as *less* relevant (lowe
 **A third, distinct retrieval bug surfaced on a different question — one relevant document flooding the candidate pool.** Asking "Do cats hunt in packs?" returned nothing useful: `wiki_cat.txt` alone accounted for roughly 19 of the top 25 RRF-ranked candidates, crowding out `animals_overview.txt` (the document that actually answers the question) entirely, even though it ranked 10th in pure semantic search alone. This wasn't the same bug as the coffee-contamination case — it was a *relevant* document dominating the pool through sheer chunk count, not an irrelevant one winning on inflated keyword scores.
 
 **Fix:** added a per-source diversity cap to the retrieval stage — no single document can contribute more than 3 chunks to the candidate pool, regardless of how well its chunks individually score. This guarantees room for multiple genuinely relevant documents to reach the reranker instead of one large document monopolizing the results. After the fix, `animals_overview.txt` reached the candidate pool and the reranker correctly promoted it, resolving the case with a verified-correct final answer.
+
+**Validated with a parameter sweep, not left as an untested guess.** I swept `max_per_source` across values 1 through 5, plus an uncapped control (999, reproducing the original pre-fix condition), against the eval cases with a known expected source. Every capped value (1-5) held at 100% retrieval accuracy, while the uncapped control dropped to 80% — confirming the cap mechanism itself is what matters, not a specific value. At this sample size (5 cases), 1 through 5 are statistically indistinguishable from each other, so I'm not claiming 3 is uniquely optimal — only that capping the pool at all is empirically justified, and 3 was a reasonable choice within the range that performed equivalently. A larger eval set would be needed to meaningfully distinguish between cap values themselves.
 
 **Final evaluation result: 11/11 retrieval accuracy, 11/11 answer accuracy** — every case either independently verified correct, or correctly scored as source-agnostic where multiple valid documents legitimately contain the same fact.
 
@@ -136,6 +140,34 @@ No single document chunk states a direct relationship between dogs and sheep —
 **Remaining known limitation:** singular/plural and phrasing variants of the same entity (e.g., "dog" vs. "dogs," "domesticated_from" vs. "domesticated from") are not yet unified, meaning some genuinely-equivalent nodes are still tracked separately. A production version would need a real entity-resolution layer (e.g., embedding-based similarity merging) rather than simple lowercase-and-strip normalization.
 
 **What a full production version would still require:** full-corpus extraction across all 796 chunks, the entity-resolution improvement above, and a hybrid query router that sends relationship-style questions to the graph and factual-lookup questions to the existing hybrid search + reranking pipeline.
+
+---
+
+## Finding 8: Calibrating the judge against a human baseline — and finding it fails without an anchor
+
+Every eval case up to this point relied on either deterministic keyword checks or an LLM judge compared against a human-written `expected_answer` reference. That reference does real work: it gives the judge something concrete to check against. I hadn't tested what happens when that anchor is removed — i.e., whether the judge can independently assess answer quality on its own, the way it would need to on genuinely novel production traffic with no pre-written reference answer.
+
+**Method:** generated 20 new questions against the live system — not the original 11 eval cases, to avoid biasing my own grading with prior knowledge of expected answers. Graded all 20 blind, myself, based purely on reading each question and answer. Independently ran the same 20 through a 3-way majority-vote judge (structurally identical to the one used in `eval.py`), with **no `expected_answer` field provided** — question and answer only, replicating a real production condition where no reference exists yet.
+
+**First run of the judge was invalid, and worth documenting why.** The initial implementation routed the grading prompt through the existing `ask_llm` function, which has a system-prompt template hard-coded around "answer using ONLY the following context." With an empty context list, the model interpreted the entire grading task through that lens and returned "the provided context is empty, I cannot verify this" for the majority of cases — a real structural bug: reusing a function outside the specific task it was designed for, without checking whether its embedded framing still applied. Rebuilt as a fully isolated grading call, bypassing that prompt template entirely, to get a valid result.
+
+**The result, once valid:**
+
+| Metric | Value |
+|---|---|
+| Raw agreement (human vs. judge) | 14/20 (70.0%) |
+| Human PASS rate | 85.0% |
+| Judge PASS rate | 85.0% |
+| **Cohen's kappa** | **-0.176** |
+
+Cohen's kappa corrects raw agreement for the rate you'd expect by chance alone, given each grader's overall pass rate — necessary here, since both graders independently passed 85% of cases, which would inflate raw agreement even if the two were tracking completely different things. A kappa near 0 means agreement no better than chance; a negative kappa means **agreement worse than chance** — the judge's calls were, in aggregate, actively uncorrelated with (arguably anti-correlated with) independent human judgment on this unanchored question set.
+
+**Inspecting the 6 disagreements showed a real, interpretable pattern, not random noise:**
+- The judge passed several answers I failed for being technically-present-but-thin or resting on an unverified causal claim (e.g., "cats sleep more as they age" stated as settled fact).
+- The judge failed several answers I passed that were, on inspection, clearly correct and well-presented (a full comparison table correctly contrasting two company policies; a correctly-stated product code and unit count).
+- One case (coffee's continent of origin) the judge had itself flagged as technically imprecise in the earlier, invalid run ("Arabia is a peninsula, not a continent") — but reversed to PASS once run without an anchor, suggesting the earlier catch was closer to an artifact of the broken prompt than genuine reasoning.
+
+**Honest conclusion:** the LLM-as-judge technique used throughout this project's eval harness performs well when anchored against a human-written reference answer, but **that reliability appears to come substantially from the anchor itself, not from the judge's independent reasoning.** Without a reference to check against — the exact condition real production traffic would present — agreement with a careful human reader was no better than chance. This means the eval harness's demonstrated 11/11 accuracy should be read as *validated against known reference answers*, not as evidence the judging mechanism would reliably self-assess novel, un-anchored production queries. A real deployment would need either a continuously human-curated reference set, a materially stronger judge model, or a different evaluation strategy entirely for genuinely novel traffic — and this gap should be disclosed as a known limitation, not implied away by a clean eval score.
 
 ---
 
