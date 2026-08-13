@@ -3,6 +3,9 @@ import json
 import time
 from datetime import datetime
 from rank_bm25 import BM25Okapi
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 def load_documents(folder):
     documents = []
@@ -48,23 +51,41 @@ print(all_chunks[0]["embedding"][:5])
 tokenized_chunks = [chunk["text"].lower().split() for chunk in all_chunks]
 bm25 = BM25Okapi(tokenized_chunks)
 
-import chromadb
+from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams, Distance, PointStruct
 
-client = chromadb.Client()
-collection = client.create_collection(name="my_docs")
+qdrant_url = os.getenv("QDRANT_URL")
+qdrant_key = os.getenv("QDRANT_API_KEY")
+client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
 
-for i, chunk in enumerate(all_chunks):
-    collection.add(
-        ids=[str(i)],
-        embeddings=[chunk["embedding"].tolist()],
-        documents=[chunk["text"]],
-        metadatas=[{"source": chunk["source"]}]
+collection_name = "rag_docs"
+if not client.collection_exists(collection_name):
+    client.create_collection(
+        collection_name=collection_name,
+        vectors_config=VectorParams(size=384, distance=Distance.COSINE)
     )
+
+points = [
+    PointStruct(
+        id=i,
+        vector=chunk["embedding"].tolist(),
+        payload={"text": chunk["text"], "source": chunk["source"]}
+    )
+    for i, chunk in enumerate(all_chunks)
+]
+
+batch_size = 100
+for i in range(0, len(points), batch_size):
+    batch = points[i:i + batch_size]
+    client.upsert(collection_name=collection_name, points=batch)
+    print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
+
+print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
 
 def hybrid_search(query, n_results=2, k=60, max_per_source=3):
     query_embedding = model.encode(query).tolist()
-    vector_results = collection.query(query_embeddings=[query_embedding], n_results=len(all_chunks))
-    vector_ranking = [int(doc_id) for doc_id in vector_results["ids"][0]]
+    vector_results = client.query_points(collection_name=collection_name, query=query_embedding, limit=len(all_chunks))
+    vector_ranking = [point.id for point in vector_results.points]
 
     tokenized_query = query.lower().split()
     bm25_scores = bm25.get_scores(tokenized_query)
@@ -113,17 +134,14 @@ def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=
 
 def compare_search(query, n_results=2):
     query_embedding = model.encode(query).tolist()
-    semantic_only = collection.query(query_embeddings=[query_embedding], n_results=n_results)
+    semantic_only = client.query_points(collection_name=collection_name, query=query_embedding, limit=n_results)
     hybrid = hybrid_search(query, n_results=n_results)
 
     print(f"\nQuery: {query}")
-    print("Semantic-only top sources:", [m["source"] for m in semantic_only["metadatas"][0]])
-    print("Hybrid top sources:", [m["source"] for m in hybrid["metadatas"][0]])
+    print("Semantic-only top sources:", [point.payload["source"] for point in semantic_only.points])
 
-from dotenv import load_dotenv
 import requests
 
-load_dotenv(override=True)
 api_key = os.getenv("OPENROUTER_API_KEY")
 
 total_cost = 0.0
@@ -249,8 +267,7 @@ if __name__ == "__main__":
             continue
 
         retrieval_start = time.time()
-        query_embedding = model.encode(query).tolist()
-        results = collection.query(query_embeddings=[query_embedding], n_results=2)
+        results = hybrid_search_with_rerank(query)
         retrieved_texts = results["documents"][0]
         retrieval_time = time.time() - retrieval_start
 
