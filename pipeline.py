@@ -59,28 +59,34 @@ qdrant_key = os.getenv("QDRANT_API_KEY")
 client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
 
 collection_name = "rag_docs"
+collection_already_populated = client.collection_exists(collection_name) and \
+    client.get_collection(collection_name).points_count > 0
+
 if not client.collection_exists(collection_name):
     client.create_collection(
         collection_name=collection_name,
         vectors_config=VectorParams(size=384, distance=Distance.COSINE)
     )
 
-points = [
-    PointStruct(
-        id=i,
-        vector=chunk["embedding"].tolist(),
-        payload={"text": chunk["text"], "source": chunk["source"]}
-    )
-    for i, chunk in enumerate(all_chunks)
-]
+if collection_already_populated:
+    print(f"Collection '{collection_name}' already has {client.get_collection(collection_name).points_count} points - skipping re-ingestion.")
+else:
+    points = [
+        PointStruct(
+            id=i,
+            vector=chunk["embedding"].tolist(),
+            payload={"text": chunk["text"], "source": chunk["source"]}
+        )
+        for i, chunk in enumerate(all_chunks)
+    ]
 
-batch_size = 100
-for i in range(0, len(points), batch_size):
-    batch = points[i:i + batch_size]
-    client.upsert(collection_name=collection_name, points=batch)
-    print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
+    batch_size = 100
+    for i in range(0, len(points), batch_size):
+        batch = points[i:i + batch_size]
+        client.upsert(collection_name=collection_name, points=batch)
+        print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
 
-print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
+    print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
 
 def hybrid_search(query, n_results=2, k=60, max_per_source=3):
     query_embedding = model.encode(query).tolist()
