@@ -52,20 +52,22 @@ tokenized_chunks = [chunk["text"].lower().split() for chunk in all_chunks]
 bm25 = BM25Okapi(tokenized_chunks)
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance, PointStruct
+from qdrant_client import models
+from qdrant_client.models import VectorParams, Distance, PointStruct, SparseVectorParams, Document
 
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_key = os.getenv("QDRANT_API_KEY")
 client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
 
-collection_name = "rag_docs"
+collection_name = "rag_docs_hybrid"
 collection_already_populated = client.collection_exists(collection_name) and \
     client.get_collection(collection_name).points_count > 0
 
 if not client.collection_exists(collection_name):
     client.create_collection(
         collection_name=collection_name,
-        vectors_config=VectorParams(size=384, distance=Distance.COSINE)
+        vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
+        sparse_vectors_config={"sparse": SparseVectorParams()}
     )
 
 if collection_already_populated:
@@ -74,7 +76,10 @@ else:
     points = [
         PointStruct(
             id=i,
-            vector=chunk["embedding"].tolist(),
+            vector={
+                "dense": chunk["embedding"].tolist(),
+                "sparse": Document(text=chunk["text"], model="Qdrant/bm25")
+            },
             payload={"text": chunk["text"], "source": chunk["source"]}
         )
         for i, chunk in enumerate(all_chunks)
@@ -88,37 +93,35 @@ else:
 
     print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
 
-def hybrid_search(query, n_results=2, k=60, max_per_source=3):
+def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
     query_embedding = model.encode(query).tolist()
-    vector_results = client.query_points(collection_name=collection_name, query=query_embedding, limit=len(all_chunks))
-    vector_ranking = [point.id for point in vector_results.points]
 
-    tokenized_query = query.lower().split()
-    bm25_scores = bm25.get_scores(tokenized_query)
-    bm25_ranking = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)
-
-    rrf_scores = {}
-    for rank, idx in enumerate(vector_ranking):
-        rrf_scores[idx] = rrf_scores.get(idx, 0) + 1 / (rank + k)
-    for rank, idx in enumerate(bm25_ranking):
-        rrf_scores[idx] = rrf_scores.get(idx, 0) + 1 / (rank + k)
-
-    ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+    results = client.query_points(
+        collection_name=collection_name,
+        prefetch=[
+            models.Prefetch(query=query_embedding, using="dense", limit=prefetch_limit),
+            models.Prefetch(query=models.Document(text=query, model="Qdrant/bm25"), using="sparse", limit=prefetch_limit),
+        ],
+        query=models.FusionQuery(fusion=models.Fusion.RRF),
+        limit=prefetch_limit
+    )
 
     source_counts = {}
-    top_indices = []
-    for idx, score in ranked:
-        source = all_chunks[idx]["source"]
+    documents = []
+    metadatas = []
+    for point in results.points:
+        source = point.payload["source"]
         if source_counts.get(source, 0) >= max_per_source:
             continue
-        top_indices.append(idx)
+        documents.append(point.payload["text"])
+        metadatas.append({"source": source})
         source_counts[source] = source_counts.get(source, 0) + 1
-        if len(top_indices) >= n_results:
+        if len(documents) >= n_results:
             break
 
     return {
-        "documents": [[all_chunks[i]["text"] for i in top_indices]],
-        "metadatas": [[{"source": all_chunks[i]["source"]} for i in top_indices]]
+        "documents": [documents],
+        "metadatas": [metadatas]
     }
 
 def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=3):
@@ -140,7 +143,7 @@ def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=
 
 def compare_search(query, n_results=2):
     query_embedding = model.encode(query).tolist()
-    semantic_only = client.query_points(collection_name=collection_name, query=query_embedding, limit=n_results)
+    semantic_only = client.query_points(collection_name=collection_name, query=query_embedding, using="dense", limit=n_results)
     hybrid = hybrid_search(query, n_results=n_results)
 
     print(f"\nQuery: {query}")

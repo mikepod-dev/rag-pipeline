@@ -1,4 +1,4 @@
-from pipeline import model, collection, ask_llm, hybrid_search, hybrid_search_with_rerank, compare_search
+from pipeline import model, ask_llm, hybrid_search, hybrid_search_with_rerank, compare_search
 
 eval_set = [
     {
