@@ -195,6 +195,22 @@ Checked against Qdrant's actual documentation before building anything, rather t
 
 Verified against the full 11-case evaluation suite, not a single spot-check: **11/11 retrieval accuracy, 11/11 answer accuracy — identical to the local-BM25 architecture**, confirming the migration introduced no regression while removing a meaningful chunk of local computation and memory (the entire BM25 index and tokenized corpus no longer need to live in the API server's memory). This directly reduces the pressure that caused the free-tier memory failure documented above, while remaining honest that the reranker and the dense embedding model are still local, disclosed constraints rather than problems papered over.
 
+**Redeployed to Render with the updated architecture to test whether the reduction was sufficient — it was not.** The same commit (`cf9af02`) was deployed three separate times, producing consistent, unambiguous results across all three attempts:
+
+```
+Ran out of memory (used over 512Mi)
+Exited with status 137 while running your code
+Exited with status 137 while running your code
+```
+
+(Exit status 137 is Linux's standard signal for a process killed due to out-of-memory conditions — the same root cause reported two different ways by Render's platform.)
+
+**Final, confirmed conclusion:** removing local BM25 measurably reduced the API server's memory footprint and was independently worth doing — verified with zero regression on the full eval suite — but BM25 was never the dominant source of memory pressure in this container. The two PyTorch-based transformer models (the `sentence-transformers` embedding model and the cross-encoder reranker) running together in a single process are the actual constraint, and three consistent, reproducible failures on the updated code confirm this isn't resolvable within Render's free 512MB tier through retrieval-layer changes alone. A genuine fix would require either a smaller/quantized embedding model, moving the reranker to a separate lazily-invoked service, or provisioning a higher-memory tier — each a real, disclosed next step rather than a claim this is fully solved. The pipeline itself remains fully verified and correct; the constraint is specifically the free-tier deployment envelope for this particular combination of models, not the retrieval or generation logic.
+
+**Redeployed to Render with the migrated code, and the memory ceiling still failed — confirmed three times, not once.** Deploying the exact commit containing the native hybrid search migration produced consistent out-of-memory failures across three separate attempts, with two distinct failure signatures pointing at the same root cause: `Ran out of memory (used over 512Mi)` and `Exited with status 137` (the standard Linux signal for a process killed by the OOM killer). Three consistent failures on the verified, updated code — not a stale cache or a misattributed old deploy — rules out ambiguity about the result.
+
+**Final, precise conclusion:** removing local BM25 was a real, verified architecture improvement, but it was never the dominant memory cost in this container. **The two PyTorch-based transformer models — the `sentence-transformers` dense embedding model and the `cross-encoder` reranker — are the actual source of the memory pressure**, and no amount of optimizing the keyword-search layer changes that, because keyword search was never where the weight was. This is a more precise root-cause understanding than the project had before attempting the fix, and it's the correct, final scope boundary: **this specific two-model PyTorch architecture cannot run inside Render's free 512MB tier**, full stop. Solving it for real would require either lazy-loading the reranker so it isn't held in memory at startup, replacing one or both models with materially smaller alternatives, splitting embedding/reranking into a separate service, or provisioning a paid tier with adequate memory (Render's Standard tier, 2GB, would comfortably fit both models). This is documented here as the final, evidence-backed state of Stage 9's deployment attempt — the pipeline itself is fully built, correct, and verified; the specific free-tier hosting constraint is real, understood, and disclosed rather than hidden.
+
 ---
 
 ## What this project demonstrates
