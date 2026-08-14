@@ -171,6 +171,28 @@ Cohen's kappa corrects raw agreement for the rate you'd expect by chance alone, 
 
 ---
 
+## Finding 9: Containerizing for deployment — a real free-tier memory ceiling
+
+To move from a local script to a genuinely deployable service, I wrapped the pipeline in a FastAPI endpoint (`POST /ask`), containerized it with Docker, and verified it locally: the containerized instance correctly connected to the live Qdrant Cloud cluster and answered questions correctly through a real HTTP request from outside the container — a working, portable, self-contained service, not just a local script.
+
+**Deploying to Render's free tier failed at runtime, not build time — a distinct and important difference.** The Docker build itself completed successfully (dependencies installed, image exported and pushed without error). The failure occurred when the container actually started and attempted to load its models into memory:
+
+```
+Out of memory (used over 512Mi)
+```
+
+**Root cause, precisely:** Render's free tier caps container memory at 512MB. The container loads two transformer models directly into memory on startup — the `sentence-transformers` bi-encoder for embeddings and the `cross-encoder/ms-marco-MiniLM-L-6-v2` reranker — plus PyTorch itself as the underlying runtime, whose baseline memory footprint alone is substantial before any model weights are even loaded. This combination reliably exceeds 512MB, which is why the build succeeds (no memory pressure during dependency installation) while the runtime startup fails (both models loading simultaneously into a hard-capped container).
+
+**Decision, consistent with the project's other free-tier findings (Qdrant's 1GB storage cap, the batch-upload timeout):** rather than upgrade to a paid tier to make the constraint disappear, I documented the actual limitation with the actual evidence, understood precisely why it occurs, and evaluated it as an engineering tradeoff rather than a blocker. A production deployment of this exact architecture would require one of: a smaller embedding model, lazy-loading the reranker only for requests that need it rather than at startup, splitting embedding/reranking into a separate service from the API layer, or simply provisioning adequate memory (Render's Standard tier, 2GB, would comfortably fit both models with room to spare). The free tier's 512MB ceiling is a real, disclosed constraint of this specific deployment choice, not a flaw in the architecture itself — the same pipeline runs correctly with no memory issues on hardware with adequate RAM, as proven by both the local machine and local Docker container tests before deployment.
+
+**A follow-up architectural option was evaluated and found to have its own disclosed boundary: a fully "stateless" API server is not achievable at $0.** The idea: eliminate local memory pressure entirely by moving BM25 keyword search and embedding computation out of the API server and into Qdrant Cloud's native hybrid search and server-side inference features, so the Render container would hold no models at all — just pass questions to Qdrant and receive fully-ranked results.
+
+Checked against Qdrant's actual documentation before building anything, rather than assuming it would work: **Qdrant's server-side inference (`cloud_inference=True`) — the specific feature that lets Qdrant compute embeddings from raw text server-side, removing the need to run `sentence-transformers` locally — explicitly requires a dedicated paid cluster.** There is no free-tier path to eliminating local embedding computation entirely; the computation has to happen somewhere, and Qdrant's free tier doesn't offer to do it for you.
+
+**Scoped, honest revision of the idea that stays within the $0 constraint:** migrate BM25 keyword search from local Python (`rank-bm25`, local tokenization, an in-memory index rebuilt every startup) to Qdrant's native sparse vectors, which run server-side and are available on the free tier. This is a real, genuine architecture improvement — removing an entire local index and its rebuild cost — while keeping `sentence-transformers` running locally for query embedding, since no free path exists to avoid that specific computation. The reranker's memory footprint remains a separate, already-documented constraint. This is disclosed here as a deliberate scope boundary decided *before* implementation, not a limitation discovered after the fact.
+
+---
+
 ## What this project demonstrates
 
 
