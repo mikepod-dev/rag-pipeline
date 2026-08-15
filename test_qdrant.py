@@ -1,5 +1,6 @@
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 
 load_dotenv(override=True)

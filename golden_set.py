@@ -1,3 +1,7 @@
+import json
+
+from pipeline import ask_llm, hybrid_search_with_rerank
+
 questions = [
     "How many breeds of dogs are there?",
     "What's the scientific name for the wolf?",
@@ -18,11 +22,8 @@ questions = [
     "What happened during the French officer's coffee voyage in 1723?",
     "What percentage of caffeine users develop tolerance to its sleep effects?",
     "What is domestication syndrome?",
-    "Can dogs communicate with humans?"
+    "Can dogs communicate with humans?",
 ]
-
-from pipeline import hybrid_search_with_rerank, ask_llm
-import json
 
 results = []
 for q in questions:

@@ -1,6 +1,9 @@
-from pipeline import all_chunks, ask_llm
 import json
+
 import networkx as nx
+
+from pipeline import all_chunks, ask_llm
+
 
 def extract_triples(text):
     prompt = f"""Extract factual relationships from this text as a list of triples: (subject, relationship, object).
@@ -20,9 +23,17 @@ If no clear relationships exist, reply with an empty list: []"""
     except json.JSONDecodeError:
         return []
 
+
 graph = nx.DiGraph()
 
-target_sources = ["dog.txt", "wiki_dog.txt", "wiki_wolf.txt", "wiki_cat.txt", "animals_overview.txt", "wiki_domestication.txt"]
+target_sources = [
+    "dog.txt",
+    "wiki_dog.txt",
+    "wiki_wolf.txt",
+    "wiki_cat.txt",
+    "animals_overview.txt",
+    "wiki_domestication.txt",
+]
 chunks_per_source = 10
 sample_chunks = []
 for source in target_sources:
@@ -46,13 +57,16 @@ print(f"\nGraph built: {graph.number_of_nodes()} entities, {graph.number_of_edge
 wolf_chunks_used = [c for c in sample_chunks if c["source"] == "wiki_wolf.txt"]
 print(f"\nActual wiki_wolf.txt chunks in sample: {len(wolf_chunks_used)}")
 
-wolf_related_edges = [(u, v, d) for u, v, d in graph.edges(data=True) if "wolf" in u.lower() or "wolf" in v.lower()]
+wolf_related_edges = [
+    (u, v, d) for u, v, d in graph.edges(data=True) if "wolf" in u.lower() or "wolf" in v.lower()
+]
 print(f"\nAll edges mentioning 'wolf' ({len(wolf_related_edges)} found):")
 for u, v, d in wolf_related_edges[:20]:
     print(f"  {u} --[{d['relationship']}]--> {v}")
 print("\nSample edges:")
 for u, v, data in list(graph.edges(data=True))[:10]:
     print(f"  {u} --[{data['relationship']}]--> {v}")
+
 
 def find_related(entity, max_hops=2):
     if entity not in graph:
@@ -70,11 +84,14 @@ def find_related(entity, max_hops=2):
             if 1 < len(path) <= max_hops + 1:
                 relationships = []
                 for i in range(len(path) - 1):
-                    edge_data = graph.get_edge_data(path[i], path[i+1])
-                    relationships.append(f"{path[i]} --[{edge_data['relationship']}]--> {path[i+1]}")
+                    edge_data = graph.get_edge_data(path[i], path[i + 1])
+                    relationships.append(
+                        f"{path[i]} --[{edge_data['relationship']}]--> {path[i+1]}"
+                    )
                 print("  " + " | ".join(relationships))
         except nx.NetworkXNoPath:
             continue
+
 
 find_related("dogs", max_hops=3)
 print("\nOutgoing edges from 'wolves' (rechecking with expanded sample):")

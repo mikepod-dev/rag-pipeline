@@ -1,15 +1,19 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from pipeline import hybrid_search_with_rerank, ask_llm, validate_query
+
+from pipeline import ask_llm, hybrid_search_with_rerank, validate_query
 
 app = FastAPI()
+
 
 class Question(BaseModel):
     query: str
 
+
 @app.get("/")
 def health_check():
     return {"status": "ok", "service": "rag-pipeline-api"}
+
 
 @app.post("/ask")
 def ask(q: Question):

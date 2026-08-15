@@ -1,11 +1,13 @@
-import os
 import json
+import os
 import time
 from datetime import datetime
-from rank_bm25 import BM25Okapi
+
 from dotenv import load_dotenv
+from rank_bm25 import BM25Okapi
 
 load_dotenv(override=True)
+
 
 def load_documents(folder):
     documents = []
@@ -16,17 +18,20 @@ def load_documents(folder):
             documents.append({"source": filename, "text": content})
     return documents
 
+
 docs = load_documents("docs")
 print(f"Loaded {len(docs)} documents")
+
 
 def chunk_text(text, chunk_size=100, overlap=30):
     words = text.split()
     chunks = []
     step = chunk_size - overlap
     for i in range(0, len(words), step):
-        chunk = " ".join(words[i:i + chunk_size])
+        chunk = " ".join(words[i : i + chunk_size])
         chunks.append(chunk)
     return chunks
+
 
 all_chunks = []
 for doc in docs:
@@ -36,7 +41,7 @@ for doc in docs:
 
 print(f"Total chunks: {len(all_chunks)}")
 
-from sentence_transformers import SentenceTransformer, CrossEncoder
+from sentence_transformers import CrossEncoder, SentenceTransformer  # noqa: E402
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
@@ -51,47 +56,57 @@ print(all_chunks[0]["embedding"][:5])
 tokenized_chunks = [chunk["text"].lower().split() for chunk in all_chunks]
 bm25 = BM25Okapi(tokenized_chunks)
 
-from qdrant_client import QdrantClient
-from qdrant_client import models
-from qdrant_client.models import VectorParams, Distance, PointStruct, SparseVectorParams, Document
+from qdrant_client import QdrantClient, models  # noqa: E402, I001
+from qdrant_client.models import (  # noqa: E402, I001
+    Distance,
+    Document,
+    PointStruct,
+    SparseVectorParams,
+    VectorParams,
+)
 
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_key = os.getenv("QDRANT_API_KEY")
 client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
 
 collection_name = "rag_docs_hybrid"
-collection_already_populated = client.collection_exists(collection_name) and \
-    client.get_collection(collection_name).points_count > 0
+collection_already_populated = (
+    client.collection_exists(collection_name)
+    and client.get_collection(collection_name).points_count > 0
+)
 
 if not client.collection_exists(collection_name):
     client.create_collection(
         collection_name=collection_name,
         vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
-        sparse_vectors_config={"sparse": SparseVectorParams()}
+        sparse_vectors_config={"sparse": SparseVectorParams()},
     )
 
 if collection_already_populated:
-    print(f"Collection '{collection_name}' already has {client.get_collection(collection_name).points_count} points - skipping re-ingestion.")
+    print(
+        f"Collection '{collection_name}' already has {client.get_collection(collection_name).points_count} points - skipping re-ingestion."
+    )
 else:
     points = [
         PointStruct(
             id=i,
             vector={
                 "dense": chunk["embedding"].tolist(),
-                "sparse": Document(text=chunk["text"], model="Qdrant/bm25")
+                "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
             },
-            payload={"text": chunk["text"], "source": chunk["source"]}
+            payload={"text": chunk["text"], "source": chunk["source"]},
         )
         for i, chunk in enumerate(all_chunks)
     ]
 
     batch_size = 100
     for i in range(0, len(points), batch_size):
-        batch = points[i:i + batch_size]
+        batch = points[i : i + batch_size]
         client.upsert(collection_name=collection_name, points=batch)
         print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
 
     print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
+
 
 def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
     query_embedding = model.encode(query).tolist()
@@ -100,10 +115,14 @@ def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
         collection_name=collection_name,
         prefetch=[
             models.Prefetch(query=query_embedding, using="dense", limit=prefetch_limit),
-            models.Prefetch(query=models.Document(text=query, model="Qdrant/bm25"), using="sparse", limit=prefetch_limit),
+            models.Prefetch(
+                query=models.Document(text=query, model="Qdrant/bm25"),
+                using="sparse",
+                limit=prefetch_limit,
+            ),
         ],
         query=models.FusionQuery(fusion=models.Fusion.RRF),
-        limit=prefetch_limit
+        limit=prefetch_limit,
     )
 
     source_counts = {}
@@ -119,10 +138,8 @@ def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
         if len(documents) >= n_results:
             break
 
-    return {
-        "documents": [documents],
-        "metadatas": [metadatas]
-    }
+    return {"documents": [documents], "metadatas": [metadatas]}
+
 
 def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=3):
     wide_results = hybrid_search(query, n_results=n_candidates, max_per_source=max_per_source)
@@ -138,18 +155,21 @@ def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=
     top = scored[:n_final]
     return {
         "documents": [[doc for doc, src, score in top]],
-        "metadatas": [[src for doc, src, score in top]]
+        "metadatas": [[src for doc, src, score in top]],
     }
+
 
 def compare_search(query, n_results=2):
     query_embedding = model.encode(query).tolist()
-    semantic_only = client.query_points(collection_name=collection_name, query=query_embedding, using="dense", limit=n_results)
-    hybrid = hybrid_search(query, n_results=n_results)
+    semantic_only = client.query_points(
+        collection_name=collection_name, query=query_embedding, using="dense", limit=n_results
+    )
 
     print(f"\nQuery: {query}")
     print("Semantic-only top sources:", [point.payload["source"] for point in semantic_only.points])
 
-import requests
+
+import requests  # noqa: E402
 
 api_key = os.getenv("OPENROUTER_API_KEY")
 
@@ -157,6 +177,7 @@ total_cost = 0.0
 total_calls = 0
 cache_hits = 0
 answer_cache = {}
+
 
 def ask_llm(question, context_chunks):
     global total_cost, total_calls, cache_hits
@@ -182,8 +203,8 @@ Question: {question}"""
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "~anthropic/claude-haiku-latest",
-            "messages": [{"role": "user", "content": prompt}]
-        }
+            "messages": [{"role": "user", "content": prompt}],
+        },
     )
     data = response.json()
 
@@ -197,13 +218,14 @@ Question: {question}"""
         "timestamp": datetime.now().isoformat(),
         "question": question,
         "answer": answer_text,
-        "cost": call_cost
+        "cost": call_cost,
     }
     with open("query_log.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
     answer_cache[cache_key] = answer_text
     return answer_text
+
 
 def self_grade_answer(question, answer, retrieved_context):
     context_preview = "\n\n".join(retrieved_context)
@@ -220,6 +242,7 @@ Reply with ONLY one word: SUFFICIENT or INSUFFICIENT."""
     grade = ask_llm(grade_prompt, [])
     return "SUFFICIENT" in grade.strip().upper()
 
+
 def rewrite_query(original_question, failed_answer):
     rewrite_prompt = f"""The following question was asked, but the answer given was insufficient - likely because retrieval didn't find the right information.
 
@@ -231,6 +254,7 @@ Rewrite the question using different words, broader terms, or a more direct phra
     rewritten = ask_llm(rewrite_prompt, [])
     return rewritten.strip()
 
+
 def agentic_answer(question, max_retries=2):
     current_question = question
     attempts = []
@@ -241,12 +265,14 @@ def agentic_answer(question, max_retries=2):
         answer = ask_llm(current_question, retrieved_texts)
 
         is_sufficient = self_grade_answer(question, answer, retrieved_texts)
-        attempts.append({
-            "attempt": attempt + 1,
-            "question_used": current_question,
-            "answer": answer,
-            "sufficient": is_sufficient
-        })
+        attempts.append(
+            {
+                "attempt": attempt + 1,
+                "question_used": current_question,
+                "answer": answer,
+                "sufficient": is_sufficient,
+            }
+        )
 
         if is_sufficient:
             return answer, attempts
@@ -256,6 +282,7 @@ def agentic_answer(question, max_retries=2):
 
     return answer, attempts
 
+
 def validate_query(query):
     if not query or not query.strip():
         return False, "Question cannot be empty."
@@ -263,11 +290,14 @@ def validate_query(query):
         return False, "Question is too long (max 500 characters)."
     return True, None
 
+
 if __name__ == "__main__":
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
-            print(f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits")
+            print(
+                f"\nSession total: {total_calls} calls, ${total_cost:.6f}, {cache_hits} cache hits"
+            )
             break
 
         is_valid, error_message = validate_query(query)

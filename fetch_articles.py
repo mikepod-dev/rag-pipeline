@@ -1,5 +1,5 @@
 import requests
-import os
+
 
 def fetch_wikipedia_article(title):
     url = "https://en.wikipedia.org/w/api.php"
@@ -10,9 +10,7 @@ def fetch_wikipedia_article(title):
         "format": "json",
         "titles": title,
     }
-    headers = {
-        "User-Agent": "RAGLearningProject/1.0 (educational project)"
-    }
+    headers = {"User-Agent": "RAGLearningProject/1.0 (educational project)"}
     response = requests.get(url, params=params, headers=headers)
     print("STATUS CODE:", response.status_code)
     print("RAW RESPONSE (first 300 chars):", response.text[:300])
@@ -21,16 +19,8 @@ def fetch_wikipedia_article(title):
     page = next(iter(pages.values()))
     return page.get("extract", "")
 
-titles = [
-    "Dog",
-    "Cat",
-    "Coffee",
-    "Domestication",
-    "Wolf",
-    "Caffeine",
-    "Pet",
-    "Espresso"
-]
+
+titles = ["Dog", "Cat", "Coffee", "Domestication", "Wolf", "Caffeine", "Pet", "Espresso"]
 
 for title in titles:
     print(f"Fetching: {title}")
