@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 import json
 
-st.title("RAG Pipeline — Live Monitoring")
+st.title("RAG Pipeline — Monitoring Dashboard")
+st.caption("Showing a snapshot of real logged usage from development and testing (not a live production feed)")
 
-records = [json.loads(line) for line in open("query_log.jsonl")]
+records = [json.loads(line) for line in open("demo_query_log.jsonl")]
 df = pd.DataFrame(records)
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 
