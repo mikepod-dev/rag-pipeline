@@ -1,5 +1,7 @@
 # RAG Pipeline with Hybrid Search, Reranking, and Production Instrumentation
 
+![Eval Suite](https://github.com/mikepod-dev/rag-pipeline/actions/workflows/eval.yml/badge.svg)
+
 A retrieval-augmented generation system built from scratch in Python — hybrid search (BM25 + embeddings), Reciprocal Rank Fusion, cross-encoder reranking, an automated evaluation harness, and production instrumentation (cost tracking, logging, caching, latency measurement).
 
 Stress-tested against 796 real chunks (Wikipedia + hand-written docs), which surfaced and led to fixing a genuine retrieval bug — not a synthetic exercise. Full writeup: [`CASE_STUDY.md`](./CASE_STUDY.md).
