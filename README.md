@@ -4,6 +4,8 @@
 
 A retrieval-augmented generation system built from scratch in Python — hybrid search (BM25 + embeddings), Reciprocal Rank Fusion, cross-encoder reranking, an automated evaluation harness, and production instrumentation (cost tracking, logging, caching, latency measurement).
 
+**Live monitoring dashboard:** [rag-pipeline.streamlit.app](https://rag-pipeline-s4mw8mbzrbbv8fzdm5lwgt.streamlit.app) — real cost/usage data from 489 logged queries across development and testing.
+
 Stress-tested against 796 real chunks (Wikipedia + hand-written docs), which surfaced and led to fixing a genuine retrieval bug — not a synthetic exercise. Full writeup: [`CASE_STUDY.md`](./CASE_STUDY.md).
 
 ## What's in here
