@@ -3,10 +3,26 @@ import os
 import time
 from datetime import datetime
 
+import requests
 from dotenv import load_dotenv
-from rank_bm25 import BM25Okapi
 
 load_dotenv(override=True)
+
+api_key = os.getenv("OPENROUTER_API_KEY")
+qdrant_url = os.getenv("QDRANT_URL")
+qdrant_key = os.getenv("QDRANT_API_KEY")
+
+collection_name = "rag_docs_hybrid"
+
+# These stay None until initialize() actually runs - importing this module
+# alone (e.g. to use chunk_text or validate_query) triggers no network calls.
+docs = None
+all_chunks = None
+model = None
+reranker = None
+client = None
+bm25 = None
+_initialized = False
 
 
 def load_documents(folder):
@@ -19,10 +35,6 @@ def load_documents(folder):
     return documents
 
 
-docs = load_documents("docs")
-print(f"Loaded {len(docs)} documents")
-
-
 def chunk_text(text, chunk_size=100, overlap=30):
     words = text.split()
     chunks = []
@@ -33,82 +45,99 @@ def chunk_text(text, chunk_size=100, overlap=30):
     return chunks
 
 
-all_chunks = []
-for doc in docs:
-    doc_chunks = chunk_text(doc["text"])
-    for chunk in doc_chunks:
-        all_chunks.append({"source": doc["source"], "text": chunk})
+def validate_query(query):
+    if not query or not query.strip():
+        return False, "Question cannot be empty."
+    if len(query) > 500:
+        return False, "Question is too long (max 500 characters)."
+    return True, None
 
-print(f"Total chunks: {len(all_chunks)}")
 
-from sentence_transformers import CrossEncoder, SentenceTransformer  # noqa: E402
+def initialize():
+    """Loads documents, computes embeddings, and connects to Qdrant.
+    Only runs once, and only when something actually needs it -
+    not on plain `import pipeline`."""
+    global docs, all_chunks, model, reranker, client, _initialized
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
-reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    if _initialized:
+        return
 
-for chunk in all_chunks:
-    embedding = model.encode(chunk["text"])
-    chunk["embedding"] = embedding
+    from qdrant_client import QdrantClient, models
+    from qdrant_client.models import (
+        Distance,
+        Document,
+        PointStruct,
+        SparseVectorParams,
+        VectorParams,
+    )
+    from sentence_transformers import CrossEncoder, SentenceTransformer
 
-print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
-print(all_chunks[0]["embedding"][:5])
+    docs = load_documents("docs")
+    print(f"Loaded {len(docs)} documents")
 
-tokenized_chunks = [chunk["text"].lower().split() for chunk in all_chunks]
-bm25 = BM25Okapi(tokenized_chunks)
+    all_chunks = []
+    for doc in docs:
+        doc_chunks = chunk_text(doc["text"])
+        for chunk in doc_chunks:
+            all_chunks.append({"source": doc["source"], "text": chunk})
+    print(f"Total chunks: {len(all_chunks)}")
 
-from qdrant_client import QdrantClient, models  # noqa: E402, I001
-from qdrant_client.models import (  # noqa: E402, I001
-    Distance,
-    Document,
-    PointStruct,
-    SparseVectorParams,
-    VectorParams,
-)
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-qdrant_url = os.getenv("QDRANT_URL")
-qdrant_key = os.getenv("QDRANT_API_KEY")
-client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
+    for chunk in all_chunks:
+        embedding = model.encode(chunk["text"])
+        chunk["embedding"] = embedding
+    print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
 
-collection_name = "rag_docs_hybrid"
-collection_already_populated = (
-    client.collection_exists(collection_name)
-    and client.get_collection(collection_name).points_count > 0
-)
+    client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
 
-if not client.collection_exists(collection_name):
-    client.create_collection(
-        collection_name=collection_name,
-        vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
-        sparse_vectors_config={"sparse": SparseVectorParams()},
+    collection_already_populated = (
+        client.collection_exists(collection_name)
+        and client.get_collection(collection_name).points_count > 0
     )
 
-if collection_already_populated:
-    print(
-        f"Collection '{collection_name}' already has {client.get_collection(collection_name).points_count} points - skipping re-ingestion."
-    )
-else:
-    points = [
-        PointStruct(
-            id=i,
-            vector={
-                "dense": chunk["embedding"].tolist(),
-                "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
-            },
-            payload={"text": chunk["text"], "source": chunk["source"]},
+    if not client.collection_exists(collection_name):
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
+            sparse_vectors_config={"sparse": SparseVectorParams()},
         )
-        for i, chunk in enumerate(all_chunks)
-    ]
 
-    batch_size = 100
-    for i in range(0, len(points), batch_size):
-        batch = points[i : i + batch_size]
-        client.upsert(collection_name=collection_name, points=batch)
-        print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
+    if collection_already_populated:
+        print(
+            f"Collection '{collection_name}' already has "
+            f"{client.get_collection(collection_name).points_count} points - skipping re-ingestion."
+        )
+    else:
+        points = [
+            PointStruct(
+                id=i,
+                vector={
+                    "dense": chunk["embedding"].tolist(),
+                    "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
+                },
+                payload={"text": chunk["text"], "source": chunk["source"]},
+            )
+            for i, chunk in enumerate(all_chunks)
+        ]
+        batch_size = 100
+        for i in range(0, len(points), batch_size):
+            batch = points[i : i + batch_size]
+            client.upsert(collection_name=collection_name, points=batch)
+            print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
+        print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
 
-    print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
+    # stash the models module reference for query-time use (Prefetch, FusionQuery, etc.)
+    globals()["_qmodels"] = models
+
+    _initialized = True
 
 
 def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
+    initialize()
+    models = globals()["_qmodels"]
+
     query_embedding = model.encode(query).tolist()
 
     results = client.query_points(
@@ -160,6 +189,7 @@ def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=
 
 
 def compare_search(query, n_results=2):
+    initialize()
     query_embedding = model.encode(query).tolist()
     semantic_only = client.query_points(
         collection_name=collection_name, query=query_embedding, using="dense", limit=n_results
@@ -168,10 +198,6 @@ def compare_search(query, n_results=2):
     print(f"\nQuery: {query}")
     print("Semantic-only top sources:", [point.payload["source"] for point in semantic_only.points])
 
-
-import requests  # noqa: E402
-
-api_key = os.getenv("OPENROUTER_API_KEY")
 
 total_cost = 0.0
 total_calls = 0
@@ -283,15 +309,8 @@ def agentic_answer(question, max_retries=2):
     return answer, attempts
 
 
-def validate_query(query):
-    if not query or not query.strip():
-        return False, "Question cannot be empty."
-    if len(query) > 500:
-        return False, "Question is too long (max 500 characters)."
-    return True, None
-
-
 if __name__ == "__main__":
+    initialize()
     while True:
         query = input("\nAsk a question (or type 'quit'): ")
         if query.lower() == "quit":
