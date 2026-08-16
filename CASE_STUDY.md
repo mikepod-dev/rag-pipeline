@@ -213,6 +213,22 @@ Exited with status 137 while running your code
 
 ---
 
+## Finding 10: A production-hygiene pass surfaced a real testability flaw, not just missing polish
+
+Adding standard code-quality tooling — Ruff and Black for linting/formatting, Pytest for unit tests, and a hardened `.gitignore` — was intended as a final coverage pass, not new architecture work. It ended up surfacing a genuine structural problem.
+
+**The linting pass itself went smoothly and was handled with the same discipline as everything else in the project:** rather than blindly auto-fixing everything, I checked each proposed change before applying it, since `pipeline.py` had real execution-order dependencies (certain imports had to run after earlier setup code, not at the top of the file). Auto-fixers reordering those imports could silently break the pipeline. Where the ordering was genuinely intentional, I used explicit `# noqa` comments rather than suppressing the linter globally or letting an automated tool "fix" something that wasn't broken — and caught, mid-process, that Black's own reformatting could relocate a `noqa` comment to a position where it no longer covered the violation it was meant to suppress, requiring a second, deliberate correction rather than trusting the first green checkmark.
+
+**Writing unit tests for `chunk_text` and `validate_query` — deliberately scoped to the project's only pure, network-free functions — worked correctly on the first attempt locally.** But adding a `lint-and-test` CI job separate from the existing `eval` job exposed something the local run had masked: **merely importing `pipeline.py` triggered the entire module's real-world side effects** — document loading, embedding model downloads, and a live Qdrant connection attempt — because all of that setup ran unconditionally at module import time, not inside a function. Locally, this "worked" (in the sense of eventually succeeding) because real credentials were always present in `.env`. In the CI job specifically built to be lightweight and credential-free, the import itself failed outright with `Connection refused`, since `QDRANT_URL` was correctly absent from that job's environment.
+
+**Rather than patch around this by adding unnecessary cloud credentials to a job that shouldn't need them, I treated it as a real architectural finding and fixed the actual cause.** Refactored `pipeline.py` so all network-touching setup lives inside a single `initialize()` function, called lazily by any function that actually needs it (`hybrid_search`, `compare_search`, the interactive loop) rather than running automatically on import. `chunk_text` and `validate_query` needed no changes at all — they were already pure — but could now be imported in complete isolation for the first time.
+
+**The measured result: unit test runtime dropped from 50.33 seconds to 0.05 seconds** — roughly a 1,000x reduction — because the test run no longer downloads an embedding model or opens a network connection just to exercise two string-processing functions. Verified the refactor introduced no regression by rerunning the full 11-case eval suite (still 11/11 retrieval and answer accuracy) and confirming the CI pipeline went fully green on GitHub's actual infrastructure, not just locally.
+
+**Why this is a real finding, not a formatting exercise:** the CI split into a fast job and a slow job was meant to be a convenience — quick feedback on code quality without waiting on live API calls. It ended up acting as a genuine architectural test, revealing that the codebase's testability had quietly depended on secrets being present, everywhere, always — a coupling that's easy to miss when working locally with a populated `.env` file, and exactly the kind of hidden assumption that breaks the first time code runs somewhere those defaults don't hold.
+
+---
+
 ## What this project demonstrates
 
 
@@ -226,6 +242,7 @@ Exited with status 137 while running your code
 - Making — and being able to justify with data — the decision *not* to ship a feature that introduced a silent-failure risk
 - Recognizing when an added safeguard (self-grading) solves one failure mode but not a harder, structurally different one, and documenting that boundary explicitly rather than presenting a partial fix as complete
 - Making a deliberate, disclosed scoping decision (validating a mechanism on a sample vs. proving a capability at full scale), then following through to actually prove the capability once time allowed — including finding and fixing a second, related sampling bug (one large source crowding out a smaller one) using the same diversity-cap principle already applied to retrieval
+- Treating a CI failure as a signal of a real architectural flaw rather than patching around it — refactoring module-level side effects into lazy initialization, reducing unit test runtime by roughly 1,000x and removing a hidden dependency on cloud credentials being present just to import the module
 
 ---
 
