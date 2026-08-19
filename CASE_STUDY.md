@@ -227,6 +227,34 @@ Adding standard code-quality tooling — Ruff and Black for linting/formatting, 
 
 **Why this is a real finding, not a formatting exercise:** the CI split into a fast job and a slow job was meant to be a convenience — quick feedback on code quality without waiting on live API calls. It ended up acting as a genuine architectural test, revealing that the codebase's testability had quietly depended on secrets being present, everywhere, always — a coupling that's easy to miss when working locally with a populated `.env` file, and exactly the kind of hidden assumption that breaks the first time code runs somewhere those defaults don't hold.
 
+**A follow-up gap in this same fix was found later, while doing unrelated work on Module 1 — profiled and closed with the same rigor, not brushed aside.** Running `pytest --collect-only` in isolation showed 9 tests collecting in 0.04–0.05s, matching the number documented above. But a full `pytest` run was intermittently taking 30+ seconds, with all 9 individual tests still reporting sub-5ms — meaning the cost was hiding somewhere pytest's own reporting doesn't surface by default. Profiled directly with `cProfile` rather than guessed at: the trace showed `sentence_transformers`'s `__init__.py` alone accounting for ~18 of the ~36 total seconds, called from `_pytest.python.py:importtestmodule` — invoked 4 times, not once. The real cause: three informally-named leftover debug scripts (`test_agent.py`, `test_hybrid.py`, `test_qdrant.py`) from earlier manual testing sessions matched pytest's `test_*.py` auto-discovery pattern, despite containing no actual test functions — just real, executable top-level code (a live agentic loop, a live hybrid search triggering `initialize()`, a live Qdrant connection). Pytest was importing and executing all three on every single test run, before finding zero real tests inside them and silently moving on. Fixed by renaming all three to `debug_*.py`, removing them from pytest's discovery pattern entirely. Re-verified: `pytest --collect-only` dropped from 30–44s (measured across seven separate runs, ruling out a one-time fluke) to 0.04s; a full test run dropped from 30+s to 0.07s — both confirmed by rerunning, not assumed from a single pass. This is the same class of hidden-cost bug Finding 10 itself describes: invisible under a normal green checkmark, real once profiled, and a reminder that naming conventions carry unintended machine meaning even for files never meant to be "tests" in the pytest sense.
+
+---
+
+## Finding 11: Smart delta ingestion — and a real Qdrant constraint discovered along the way
+
+**The problem, measured precisely:** every cold start of `pipeline.py` re-chunked and re-embedded all 796 chunks locally, then checked whether Qdrant already had current data — meaning even a single-character edit to one document triggered a full 16-document, 796-chunk re-embedding pass. This was the actual startup bottleneck on every run, not just the first.
+
+**The fix:** each source document is now SHA256-hashed and tracked in a local manifest (`ingestion_manifest.json`) recording each file's hash and last-processed timestamp. On startup, only files whose hash has changed since the last run are re-chunked, re-embedded, and re-upserted; unchanged files are skipped entirely.
+
+**A real, non-obvious Qdrant constraint surfaced building this — not a bug in this project's logic.** The original design deleted a changed document's stale points before re-inserting them, filtering by the `source` payload field. This failed immediately with a `400 Bad Request`: *"Index required but not found for 'source' of one of the following types: [keyword]."* Nothing before this point in the project had ever needed to filter-query by payload field — search always worked by vector similarity, never by exact metadata match — so this constraint had simply never been exercised. Fixed by explicitly creating a keyword payload index on `source` (`client.create_payload_index(..., field_schema=models.PayloadSchemaType.KEYWORD)`) before any filtered delete is attempted. The call is idempotent, so it's safe to run on every `initialize()`, not just the first.
+
+**Point IDs also had to change from implicit to deterministic.** The original design assigned point IDs via `enumerate()` across all chunks — recomputed fresh every run. That's only safe when every run either re-embeds everything or skips upload entirely. Once ingestion became partial, sequential per-run IDs would silently collide or orphan stale chunks the moment a document's chunk count changed between runs. Fixed with `uuid5(source, chunk_index)` — deterministic across runs, so the same logical chunk always maps to the same point ID, and a changed document's old points can be reliably found and deleted before its new points are inserted.
+
+**Verified against real data, not assumed correct:**
+
+| Scenario | Files changed | Chunks reprocessed | `initialize()` time | Qdrant `points_count` after |
+|---|---|---|---|---|
+| Cold start (first-ever run) | 16 | 796 | 45.062s | 796 |
+| One file changed | 1 | 132 | 27.344s–28.381s (two runs) | 796 |
+| Zero files changed (warm) | 0 | 0 | 23.970s | 796 |
+
+The point count staying fixed at 796 across every scenario — including after a partial update and after reverting a file back to its original content — is the evidence that delete-before-reinsert genuinely replaces stale points rather than duplicating or orphaning them, verified directly against the live collection rather than inferred from log output.
+
+**Honest interpretation of the timing numbers:** the ~24-second floor present in every scenario, including the zero-change case, is model-loading time (`SentenceTransformer` + `CrossEncoder`), which loads unconditionally on every `initialize()` call regardless of ingestion delta — this is the same PyTorch memory/load cost documented in Finding 9, not something this module touches. What delta detection actually eliminates is the *proportional* cost above that floor: full-corpus re-embedding costs ~21 extra seconds; a single-file change costs ~3–4 extra seconds; no change costs none. This is disclosed as a partial, well-scoped win — not a claim that ingestion is now instant.
+
+**Verified against the full 11-case eval suite after the refactor:** 11/11 retrieval accuracy, 11/11 answer accuracy — identical to pre-refactor results, confirming the delta-detection logic changed *how* data reaches Qdrant without changing *what* ends up there or how retrieval behaves.
+
 ---
 
 ## What this project demonstrates
@@ -243,6 +271,7 @@ Adding standard code-quality tooling — Ruff and Black for linting/formatting, 
 - Recognizing when an added safeguard (self-grading) solves one failure mode but not a harder, structurally different one, and documenting that boundary explicitly rather than presenting a partial fix as complete
 - Making a deliberate, disclosed scoping decision (validating a mechanism on a sample vs. proving a capability at full scale), then following through to actually prove the capability once time allowed — including finding and fixing a second, related sampling bug (one large source crowding out a smaller one) using the same diversity-cap principle already applied to retrieval
 - Treating a CI failure as a signal of a real architectural flaw rather than patching around it — refactoring module-level side effects into lazy initialization, reducing unit test runtime by roughly 1,000x and removing a hidden dependency on cloud credentials being present just to import the module
+- Building an incremental-ingestion system against real infrastructure constraints (payload indexing requirements, point-ID stability across partial updates) discovered during implementation, rather than assumed upfront — and proving correctness with real point-count checks, not just clean log output
 
 ---
 
