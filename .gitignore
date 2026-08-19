@@ -1,5 +1,6 @@
 .env
 query_log.jsonl
+ingestion_manifest.json
 __pycache__/
 *.pyc
 .pytest_cache/
