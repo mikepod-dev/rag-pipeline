@@ -1,7 +1,9 @@
+from celery.result import AsyncResult
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from pipeline import ask_llm, hybrid_search_with_rerank, validate_query
+from celery_app import celery_app
+from pipeline import answer_question_task, validate_query
 
 app = FastAPI()
 
@@ -21,6 +23,22 @@ def ask(q: Question):
     if not is_valid:
         return {"error": error}
 
-    results = hybrid_search_with_rerank(q.query)
-    answer = ask_llm(q.query, results["documents"][0])
-    return {"question": q.query, "answer": answer}
+    task = answer_question_task.delay(q.query)
+    return {"task_id": task.id, "status": "processing"}
+
+
+@app.get("/result/{task_id}")
+def get_result(task_id: str):
+    task_result = AsyncResult(task_id, app=celery_app)
+
+    if task_result.state == "PENDING":
+        return {"status": "processing"}
+
+    if task_result.state == "FAILURE":
+        return {"status": "failed", "error": str(task_result.result)}
+
+    if task_result.state == "SUCCESS":
+        result = task_result.result
+        return {"status": "complete", "question": result["question"], "answer": result["answer"]}
+
+    return {"status": task_result.state.lower()}
