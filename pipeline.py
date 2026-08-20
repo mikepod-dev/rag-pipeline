@@ -1,12 +1,15 @@
 import hashlib
 import json
 import os
+import threading
 import time
 import uuid
 from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
+
+from celery_app import celery_app
 
 load_dotenv(override=True)
 
@@ -25,6 +28,7 @@ reranker = None
 client = None
 bm25 = None
 _initialized = False
+_init_lock = threading.Lock()
 
 MANIFEST_PATH = "ingestion_manifest.json"
 # Fixed namespace so uuid5(source, chunk_index) is stable across every run
@@ -92,120 +96,128 @@ def initialize():
     if _initialized:
         return
 
-    from qdrant_client import QdrantClient, models
-    from qdrant_client.models import (
-        Distance,
-        Document,
-        PointStruct,
-        SparseVectorParams,
-        VectorParams,
-    )
-    from sentence_transformers import CrossEncoder, SentenceTransformer
+    with _init_lock:
+        if _initialized:
+            return
 
-    folder = "docs"
-    manifest = load_manifest()
-    current_files = os.listdir(folder)
+        from qdrant_client import QdrantClient, models
+        from qdrant_client.models import (
+            Distance,
+            Document,
+            PointStruct,
+            SparseVectorParams,
+            VectorParams,
+        )
+        from sentence_transformers import CrossEncoder, SentenceTransformer
 
-    changed_sources = []
-    unchanged_sources = []
-    for filename in current_files:
-        filepath = os.path.join(folder, filename)
-        file_hash = compute_file_hash(filepath)
-        if manifest.get(filename, {}).get("hash") != file_hash:
-            changed_sources.append(filename)
-        else:
-            unchanged_sources.append(filename)
+        folder = "docs"
+        manifest = load_manifest()
+        current_files = os.listdir(folder)
 
-    removed_sources = [f for f in manifest if f not in current_files]
+        changed_sources = []
+        unchanged_sources = []
+        for filename in current_files:
+            filepath = os.path.join(folder, filename)
+            file_hash = compute_file_hash(filepath)
+            if manifest.get(filename, {}).get("hash") != file_hash:
+                changed_sources.append(filename)
+            else:
+                unchanged_sources.append(filename)
 
-    print(
-        f"Delta check: {len(changed_sources)} changed, "
-        f"{len(unchanged_sources)} unchanged, {len(removed_sources)} removed"
-    )
+        removed_sources = [f for f in manifest if f not in current_files]
 
-    docs = []
-    for filename in changed_sources:
-        filepath = os.path.join(folder, filename)
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-        docs.append({"source": filename, "text": content})
-
-    all_chunks = []
-    for doc in docs:
-        for i, chunk in enumerate(chunk_text(doc["text"])):
-            all_chunks.append({"source": doc["source"], "text": chunk, "chunk_index": i})
-    print(f"Re-chunked {len(all_chunks)} chunks from {len(changed_sources)} changed document(s)")
-
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-
-    for chunk in all_chunks:
-        embedding = model.encode(chunk["text"])
-        chunk["embedding"] = embedding
-    if all_chunks:
-        print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
-
-    client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
-
-    if not client.collection_exists(collection_name):
-        client.create_collection(
-            collection_name=collection_name,
-            vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
-            sparse_vectors_config={"sparse": SparseVectorParams()},
+        print(
+            f"Delta check: {len(changed_sources)} changed, "
+            f"{len(unchanged_sources)} unchanged, {len(removed_sources)} removed"
         )
 
-    client.create_payload_index(
-        collection_name=collection_name,
-        field_name="source",
-        field_schema=models.PayloadSchemaType.KEYWORD,
-    )
-    sources_to_clear = changed_sources + removed_sources
-    if sources_to_clear:
-        client.delete(
-            collection_name=collection_name,
-            points_selector=models.Filter(
-                must=[
-                    models.FieldCondition(key="source", match=models.MatchAny(any=sources_to_clear))
-                ]
-            ),
-        )
-        print(f"Cleared existing points for {len(sources_to_clear)} changed/removed source(s)")
+        docs = []
+        for filename in changed_sources:
+            filepath = os.path.join(folder, filename)
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+            docs.append({"source": filename, "text": content})
 
-    if all_chunks:
-        points = [
-            PointStruct(
-                id=chunk_point_id(chunk["source"], chunk["chunk_index"]),
-                vector={
-                    "dense": chunk["embedding"].tolist(),
-                    "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
-                },
-                payload={"text": chunk["text"], "source": chunk["source"]},
+        all_chunks = []
+        for doc in docs:
+            for i, chunk in enumerate(chunk_text(doc["text"])):
+                all_chunks.append({"source": doc["source"], "text": chunk, "chunk_index": i})
+        print(
+            f"Re-chunked {len(all_chunks)} chunks from {len(changed_sources)} changed document(s)"
+        )
+
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+        for chunk in all_chunks:
+            embedding = model.encode(chunk["text"])
+            chunk["embedding"] = embedding
+        if all_chunks:
+            print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
+
+        client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
+
+        if not client.collection_exists(collection_name):
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
+                sparse_vectors_config={"sparse": SparseVectorParams()},
             )
-            for chunk in all_chunks
-        ]
-        batch_size = 100
-        for i in range(0, len(points), batch_size):
-            batch = points[i : i + batch_size]
-            client.upsert(collection_name=collection_name, points=batch)
-            print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
-        print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
-    else:
-        print("No changed documents - nothing to upsert.")
 
-    now = datetime.now().isoformat()
-    for filename in changed_sources:
-        manifest[filename] = {
-            "hash": compute_file_hash(os.path.join(folder, filename)),
-            "last_processed": now,
-        }
-    for filename in removed_sources:
-        del manifest[filename]
-    save_manifest(manifest)
+        client.create_payload_index(
+            collection_name=collection_name,
+            field_name="source",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        sources_to_clear = changed_sources + removed_sources
+        if sources_to_clear:
+            client.delete(
+                collection_name=collection_name,
+                points_selector=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="source", match=models.MatchAny(any=sources_to_clear)
+                        )
+                    ]
+                ),
+            )
+            print(f"Cleared existing points for {len(sources_to_clear)} changed/removed source(s)")
 
-    # stash the models module reference for query-time use (Prefetch, FusionQuery, etc.)
-    globals()["_qmodels"] = models
+        if all_chunks:
+            points = [
+                PointStruct(
+                    id=chunk_point_id(chunk["source"], chunk["chunk_index"]),
+                    vector={
+                        "dense": chunk["embedding"].tolist(),
+                        "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
+                    },
+                    payload={"text": chunk["text"], "source": chunk["source"]},
+                )
+                for chunk in all_chunks
+            ]
+            batch_size = 100
+            for i in range(0, len(points), batch_size):
+                batch = points[i : i + batch_size]
+                client.upsert(collection_name=collection_name, points=batch)
+                print(f"Upserted batch {i // batch_size + 1} ({len(batch)} points)")
+            print(f"Upserted {len(points)} total points to Qdrant collection '{collection_name}'")
+        else:
+            print("No changed documents - nothing to upsert.")
 
-    _initialized = True
+        now = datetime.now().isoformat()
+        for filename in changed_sources:
+            manifest[filename] = {
+                "hash": compute_file_hash(os.path.join(folder, filename)),
+                "last_processed": now,
+            }
+        for filename in removed_sources:
+            del manifest[filename]
+        save_manifest(manifest)
+
+        # stash the models module reference for query-time use (Prefetch, FusionQuery, etc.)
+        globals()["_qmodels"] = models
+
+        _initialized = True
 
 
 def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
@@ -381,6 +393,14 @@ def agentic_answer(question, max_retries=2):
             current_question = rewrite_query(current_question, answer)
 
     return answer, attempts
+
+
+@celery_app.task(name="pipeline.answer_question_task")
+def answer_question_task(question):
+    results = hybrid_search_with_rerank(question)
+    retrieved_texts = results["documents"][0]
+    answer = ask_llm(question, retrieved_texts)
+    return {"question": question, "answer": answer}
 
 
 if __name__ == "__main__":
