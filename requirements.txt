@@ -5,3 +5,6 @@ python-dotenv
 sentence-transformers
 rank-bm25
 qdrant-client
+celery==5.6.3
+redis==8.1.0
+certifi==2026.7.22
