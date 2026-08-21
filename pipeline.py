@@ -29,6 +29,7 @@ client = None
 bm25 = None
 _initialized = False
 _init_lock = threading.Lock()
+_reranker_lock = threading.Lock()
 
 MANIFEST_PATH = "ingestion_manifest.json"
 # Fixed namespace so uuid5(source, chunk_index) is stable across every run
@@ -108,7 +109,7 @@ def initialize():
             SparseVectorParams,
             VectorParams,
         )
-        from sentence_transformers import CrossEncoder, SentenceTransformer
+        from sentence_transformers import SentenceTransformer
 
         folder = "docs"
         manifest = load_manifest()
@@ -147,7 +148,6 @@ def initialize():
         )
 
         model = SentenceTransformer("all-MiniLM-L6-v2")
-        reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
         for chunk in all_chunks:
             embedding = model.encode(chunk["text"])
@@ -220,6 +220,25 @@ def initialize():
         _initialized = True
 
 
+def get_reranker():
+    """Lazily loads the cross-encoder reranker on first use, not at initialize() time.
+    Thread-safe via double-checked locking, same pattern as initialize()."""
+    global reranker
+
+    if reranker is not None:
+        return reranker
+
+    with _reranker_lock:
+        if reranker is not None:
+            return reranker
+
+        from sentence_transformers import CrossEncoder
+
+        print("Lazy-loading reranker on first use...")
+        reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+        return reranker
+
+
 def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
     initialize()
     models = globals()["_qmodels"]
@@ -262,7 +281,7 @@ def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=
     candidate_sources = wide_results["metadatas"][0]
 
     pairs = [[query, doc] for doc in candidates]
-    scores = reranker.predict(pairs)
+    scores = get_reranker().predict(pairs)
 
     scored = list(zip(candidates, candidate_sources, scores))
     scored.sort(key=lambda x: x[2], reverse=True)
