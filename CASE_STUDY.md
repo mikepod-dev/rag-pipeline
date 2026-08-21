@@ -279,6 +279,23 @@ The point count staying fixed at 796 across every scenario — including after a
 
 **A real gap in this "zero regression" claim was found after merging to `main` - CI was never actually watched, only assumed.** Local `ruff`, `black`, `pytest`, and `eval.py` all passed before every commit in this module, and the merge to `main` itself completed cleanly - but GitHub Actions' `lint-and-test` and `eval` jobs both failed immediately after, with `ModuleNotFoundError: No module named 'celery'`. Root cause: `celery`, `redis`, and `certifi` were installed globally on the local development machine (from earlier manual `pip install` commands during Module 2's setup) but were never added to `requirements.txt`, so CI's `pip install -r requirements.txt` step never installed them - the exact "works on my machine" gap Finding 10 exists specifically to catch, just for a missing dependency this time instead of a hidden network call. Fixed by adding all three to `requirements.txt`, verified locally with a fresh `pip install -r requirements.txt` run (confirming no version conflicts against the rest of the dependency tree) before pushing, then confirmed for real by watching both GitHub Actions jobs actually turn green (`lint-and-test`: 1m 37s, `eval`: 2m 27s) rather than assuming the fix worked. The honest lesson: verifying "no regression" locally and merging cleanly is not the same as verifying CI passes - this module's process, going forward, should include actually watching the Actions tab after every merge, not just trusting a clean local pass and a conflict-free `git merge`.
 
+## Finding 13: Attacking the real memory ceiling — the import itself, not the model weights, is the dominant cost
+
+**Task 1 baseline, measured precisely with `psutil` (RSS, not virtual memory) rather than estimated:**
+
+| State | Memory (RSS) | Delta |
+|---|---|---|
+| Baseline (interpreter started, nothing imported) | 17.6-17.9 MB | - |
+| After importing `sentence_transformers` (no model instantiated yet) | 458.9-459.1 MB | **+441.3-441.5 MB** |
+| After loading the embedder only (`SentenceTransformer`) | 483.2 MB | +24.3 MB |
+| After full `initialize()` (embedder + reranker + Qdrant setup) | 547.3 MB | +64.1 MB beyond embedder-only |
+
+Measured on a single, genuine `initialize()` call - an earlier version of this measurement accidentally loaded both models twice (once standalone to isolate each model's individual cost, once again inside `initialize()`), which would have overstated the real footprint. Caught before trusting the number, corrected with a clean single-load script.
+
+**The real, precise finding: importing the `sentence_transformers` library costs ~441 MB by itself, before either model is instantiated - roughly 81% of the entire ~547 MB footprint.** The two actual models combined - the embedder's weights plus the reranker's weights plus Qdrant client setup - account for only the remaining ~106 MB (~19%). This sharpens Finding 9's original diagnosis: the constraint isn't "two models are large," it's specifically "importing PyTorch/`sentence_transformers` has a large, mostly fixed cost paid at import time, independent of which specific model checkpoints get loaded."
+
+**This directly changes the honest expectation for Task 2 (lazy-loading the reranker), checked with real measurements before writing any lazy-loading code rather than assumed to help:** deferring `CrossEncoder` instantiation until first use would land a freshly-started server at ~483.2 MB instead of ~547.3 MB - a real but modest ~64 MB (~12%) reduction, and critically, **483.2 MB already exceeds Render's 512 MB free-tier limit on its own**, before a single request arrives. Once the first real query comes in, `hybrid_search_with_rerank` always calls the reranker, so memory converges right back to ~547.3 MB - lazy-loading delays when the peak is reached, it does not lower the steady-state peak under real traffic. This is disclosed here, before implementation, as the honest expected outcome - not discovered after the fact and downplayed.
+
 ## What this project demonstrates
 
 
