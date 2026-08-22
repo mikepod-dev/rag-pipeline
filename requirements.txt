@@ -8,3 +8,10 @@ qdrant-client
 celery==5.6.3
 redis==8.1.0
 certifi==2026.7.22
+ragas==0.4.3
+langchain-openai==1.6.0
+langchain-huggingface==1.2.2
+# Pinned below 0.4: ragas 0.4.3 has an unconditional import of ChatVertexAI
+# from a path langchain-community 0.4+ removed - breaks `import ragas` for
+# all users, not just Vertex AI ones. See CASE_STUDY.md Finding 15.
+langchain-community<0.4

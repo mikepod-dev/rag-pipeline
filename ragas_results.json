@@ -1,0 +1,202 @@
+[
+  {
+    "user_input":"How many breeds of dogs are there?",
+    "retrieved_contexts":[
+      "Dogs are domesticated mammals, not natural wild animals. They were originally bred from wolves. Dogs have been bred by humans for a long time, and were the first animals to be domesticated. There are around 450 different breeds of dogs.",
+      "craniofacial development, which distinguish domesticated dogs from wolves and are considered to reflect domestication syndrome. The study concluded that during early dog domestication, the initial selection was for behavior. This trait is influenced by those genes which act in the neural crest, which led to the phenotypes observed in modern dogs. === Breeds === There are around 450 official dog breeds, the most of any mammal. Dogs began diversifying in the Victorian era, when humans took control of their natural selection. Most breeds were derived from small numbers of founders within the last 200 years. Since then, dogs have undergone"
+    ],
+    "response":"According to the context, there are around 450 different breeds of dogs. The context also notes that this represents the most breeds of any mammal.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.8355077158
+  },
+  {
+    "user_input":"What's the scientific name for the wolf?",
+    "retrieved_contexts":[
+      "Wolf\"), Wulfst\u0101n (\"Wolf Stone\") \u00c6\u00f0elwulf (\"Noble Wolf\"), Wolfhroc (\"Wolf-Frock\"), Wolfhetan (\"Wolf Hide\"), Scrutolf (\"Garb Wolf\"), Wolfgang (\"Wolf Gait\") and Wolfdregil (\"Wolf Runner\"). == Taxonomy == In 1758, the Swedish botanist and zoologist Carl Linnaeus published in his Systema Naturae the binomial nomenclature. Canis is the Latin word meaning \"dog\", and under this genus he listed the doglike carnivores including domestic dogs, wolves, and jackals. He classified the domestic dog as Canis familiaris, and the wolf as Canis lupus. Linnaeus considered the dog to be a separate species from the wolf because of its \"cauda recurvata\" (upturning tail) which is not",
+      "from the Proto-Germanic *wulfaz. The Proto-Indo-European root *w\u013a\u0325k\u02b7os is also the source of the Latin word for the animal lupus (from Proto-Italic *l\u00fak\u02b7os). The name \"grey wolf\" refers to the greyish colour of the species. Since pre-Christian times, Germanic peoples such as the Anglo-Saxons took on wulf as a prefix or suffix in their names. Examples include Wulfhere (\"Wolf Army\"), Cynewulf (\"Royal Wolf\"), C\u0113nwulf (\"Bold Wolf\"), Wulfheard (\"Wolf-hard\"), Earnwulf (\"Eagle Wolf\"), Wulfst\u0101n (\"Wolf Stone\") \u00c6\u00f0elwulf (\"Noble Wolf\"), Wolfhroc (\"Wolf-Frock\"), Wolfhetan (\"Wolf Hide\"), Scrutolf (\"Garb Wolf\"), Wolfgang (\"Wolf Gait\") and Wolfdregil (\"Wolf Runner\"). == Taxonomy == In 1758, the Swedish botanist"
+    ],
+    "response":"Based on the context provided, the scientific name for the wolf is **C. lupus** (which stands for *Canis lupus*).\n\nThe context indicates that the nominate subspecies is the Eurasian wolf (*C. l. lupus*), and that Wozencraft listed 38 subspecies of *C. lupus* under the biological common name of \"wolf.\"",
+    "faithfulness":0.1666666667,
+    "answer_relevancy":0.9947377462
+  },
+  {
+    "user_input":"Why do cats sleep so much?",
+    "retrieved_contexts":[
+      "and dusk. However, house cats' behavior is also influenced by human activity, and they may adapt to their owners' sleeping patterns to some extent. Cats conserve energy by sleeping more than most animals, especially as they grow older. The daily duration of sleep varies, usually between 12 and 16 hours, with 13 to 14 being the average. Some cats can sleep as much as 20 hours. The term \"cat nap\" for a short rest refers to the cat's tendency to fall asleep (lightly) for a brief period. Short periods of rapid eye movement sleep are often accompanied by muscle twitches,",
+      "Cats are small carnivorous mammals. They are often called domestic cats to distinguish them from wild members of the family. Cats have been domesticated for nearly 10,000 years. Adult cats sleep 12 to 16 hours a day."
+    ],
+    "response":"Based on the provided context, cats sleep so much because **they conserve energy by sleeping more than most animals, especially as they grow older**.\n\nThe context states that \"Cats conserve energy by sleeping more than most animals, especially as they grow older,\" which explains the reason for their extended sleep duration of typically 12 to 16 hours per day (with some cats sleeping as much as 20 hours).",
+    "faithfulness":0.8,
+    "answer_relevancy":1.0
+  },
+  {
+    "user_input":"What color can a wolf's fur be?",
+    "retrieved_contexts":[
+      "species by its less pointed ears and muzzle, as well as a shorter torso and a longer tail. The wolf is nonetheless related closely enough to smaller Canis species, such as the coyote and the golden jackal, to produce fertile hybrids with them. The wolf's fur is usually mottled white, brown, grey, and black, although subspecies in the arctic region may be nearly all white. Of all members of the genus Canis, the wolf is most specialized for cooperative game hunting, as demonstrated by its physical adaptations to tackling large prey, its more social nature, and its highly advanced expressive",
+      "coats as they age. Older wolves generally have more white hairs on the tip of the tail, along the nose, and on the forehead. Winter fur is retained longest by lactating females, although with some hair loss around their teats. Hair length on the middle of the back is 60\u201370 mm (2.4\u20132.8 in), and the guard hairs on the shoulders generally do not exceed 90 mm (3.5 in), but can reach 110\u2013130 mm (4.3\u20135.1 in). A wolf's coat colour is determined by its guard hairs. Wolves usually have some hairs that are white, brown, grey and black. The coat of"
+    ],
+    "response":"# Wolf Fur Color\n\nAccording to the context, a wolf's fur can be:\n\n- **White, brown, grey, and black** (usually mottled combination of these colors)\n- **Nearly all white** (in arctic subspecies)\n\nThe context also notes that a wolf's coat color is determined by its guard hairs, and that older wolves generally develop more white hairs on the tip of the tail, along the nose, and on the forehead as they age.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.9875982436
+  },
+  {
+    "user_input":"How long has coffee been cultivated?",
+    "retrieved_contexts":[
+      "of the seeds' potential, as about half fail to sprout. A more effective process of growing coffee, used in Brazil, is to raise seedlings in nurseries that are then planted outside after six to twelve months. Coffee is often intercropped with food crops, such as corn, beans, or rice during the first few years of cultivation as farmers become familiar with its requirements. Coffee plants grow within a defined area between the tropics of Cancer and Capricorn, termed the bean belt or coffee belt. In 2020, the world production of green coffee beans was 175,647,000 60 kg bags, led by",
+      "be cultivated in Java in the 17th century and the Americas from the 18th century. The two most commonly grown coffee bean types are C. arabica and C. robusta. Coffee plants are cultivated in over 70 countries, primarily in the equatorial regions of the Americas, Southeast Asia, the Indian subcontinent, and Africa. Green, unroasted coffee is traded as an agricultural commodity. The global coffee industry was worth $495.50 billion in 2023. In 2023, Brazil was the leading grower of coffee beans, producing 31% of the world's total, followed by Vietnam. While coffee sales reach billions of dollars annually worldwide, coffee"
+    ],
+    "response":"Based on the context provided, coffee cultivation dates back centuries. The context states \"The history of coffee cultivation dates back centuries\" but does not provide a specific timeframe or number of years.\n\nThe earliest point mentioned in the history is a legend about coffee's discovery in Ethiopia by a goat herder named Kaldi, followed by its spread to the Arabian Peninsula by the 15th century, then to Europe in the 17th century, and finally to the Americas in the 18th century. However, the context does not specify exactly how many centuries or years coffee has been cultivated.",
+    "faithfulness":0.5714285714,
+    "answer_relevancy":0.0
+  },
+  {
+    "user_input":"What continent did coffee originate from?",
+    "retrieved_contexts":[
+      "the 17th century, coffee had spread to Europe, where it was initially met with suspicion by some religious leaders before becoming widely accepted. The Dutch were among the first Europeans to successfully cultivate coffee outside of Arabia, establishing plantations in Java. Coffee then made its way to the Americas in the 18th century, brought by a French naval officer who transported a single coffee plant across the Atlantic Ocean. That single plant is believed to be the ancestor of millions of coffee trees now grown throughout Central and South America. Brazil eventually became the world's largest coffee producer, a position",
+      "single plant is believed to be the ancestor of millions of coffee trees now grown throughout Central and South America. Brazil eventually became the world's largest coffee producer, a position it still holds today. The specific year the French officer completed this journey was 1723, and the plant survived a difficult voyage that included a storm, a suspected saboteur, and a severe drought at sea."
+    ],
+    "response":"According to the context provided, coffee originated from **Arabia**. The context mentions that \"in the 17th century, coffee had spread to Europe\" from Arabia, and also notes that \"The Dutch were among the first Europeans to successfully cultivate coffee outside of Arabia,\" indicating that Arabia was the original source of coffee.",
+    "faithfulness":0.5,
+    "answer_relevancy":0.9024318221
+  },
+  {
+    "user_input":"Do dogs have a better sense of smell than humans?",
+    "retrieved_contexts":[
+      "is the most sensitive to photons. Additionally, a study found that dogs' visual acuity was up to eight times less effective than a human, and their ability to discriminate levels of brightness was about two times worse than a human. While the human brain is dominated by a large visual cortex, the dog brain is dominated by a large olfactory cortex. Dogs have roughly forty times more smell-sensitive receptors than humans, ranging from about 125 million to nearly 300 million in some dog breeds, such as bloodhounds. This sense of smell is the most prominent sense of the species; it",
+      "smell, hearing, and sight. Compared to humans, dogs possess a superior sense of smell and hearing, but inferior visual acuity. Dogs perform many roles for humans, such as hunting, herding, pulling loads, protection, companionship, therapy, aiding disabled people, and assisting police and the military. Communication in dogs includes eye gaze, facial expression, vocalization, body posture (including movements of bodies and limbs), and chemical communication (scents, pheromones, and taste). They mark their territories by urinating on them, which is more likely when entering a new environment. Over the millennia, dogs have uniquely adapted to human behavior; this adaptation includes being able"
+    ],
+    "response":"Yes, according to the context, dogs have a better sense of smell than humans. \n\nThe context states that \"Dogs have roughly forty times more smell-sensitive receptors than humans, ranging from about 125 million to nearly 300 million in some dog breeds, such as bloodhounds.\" It also notes that \"This sense of smell is the most prominent sense of the species,\" and explains that the dog brain is \"dominated by a large olfactory cortex,\" whereas the human brain is dominated by a large visual cortex.",
+    "faithfulness":1.0,
+    "answer_relevancy":1.0
+  },
+  {
+    "user_input":"What is the DSM-5 diagnosis related to caffeine?",
+    "retrieved_contexts":[
+      "a distinct diagnostic category, which closely mirrors the DSM-5's proposed set of criteria for \"caffeine-use disorder\". Caffeine use disorder refers to dependence on caffeine characterized by failure to control caffeine consumption despite negative physiological consequences. The APA, which published the DSM-5, acknowledged that there was sufficient evidence in order to create a diagnostic model of caffeine dependence for the DSM-5, but they noted that the clinical significance of the disorder is unclear. Due to this inconclusive evidence on clinical significance, the DSM-5 classifies caffeine-use disorder as a \"condition for further study\". Tolerance to the effects of caffeine occurs for caffeine-induced",
+      "reduce anxiety. In moderate doses, caffeine has been associated with reduced symptoms of depression and lower suicide risk. Two reviews indicate that increased consumption of coffee and caffeine may reduce the risk of depression. Some sources state that caffeine is a mild euphoriant, while others state that it is not a euphoriant. Caffeine-induced anxiety disorder is a subclass of the DSM-5 diagnosis of substance\/medication-induced anxiety disorder. === Reinforcement disorders === ==== Addiction ==== Whether caffeine can result in an addictive disorder depends on how addiction is defined. Compulsive caffeine consumption under any circumstances has not been observed, and caffeine is"
+    ],
+    "response":"According to the context, the DSM-5 proposes criteria for \"caffeine-use disorder,\" which refers to dependence on caffeine characterized by failure to control caffeine consumption despite negative physiological consequences.\n\nHowever, the DSM-5 does **not** include caffeine-use disorder as an official diagnosis. Instead, it classifies caffeine-use disorder as a **\"condition for further study.\"** The American Psychiatric Association acknowledged there was sufficient evidence to create a diagnostic model, but noted that the clinical significance of the disorder is unclear, which led to this classification rather than a formal diagnosis.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.8743344117
+  },
+  {
+    "user_input":"What's the relationship between dogs and wolves?",
+    "retrieved_contexts":[
+      "because considerable morphological diversity existed among wolves during the Late Pleistocene. DNA sequences show that all ancient and modern dogs share a common ancestry and descended from an ancient, extinct wolf population that was distinct from any modern wolf lineage. Some studies have posited that all living wolves are more closely related to each other than to dogs, while others have suggested that dogs are more closely related to modern Eurasian wolves than to American wolves. The dog is a domestic animal that likely travelled a commensal pathway into domestication (i.e. humans initially neither benefitted nor were harmed by wild",
+      "settled, sheep-herding world. His most famous is the fable of \"The Boy Who Cried Wolf\", which is directed at those who knowingly raise false alarms, and from which the idiomatic phrase \"to cry wolf\" is derived. Some of his other fables concentrate on maintaining the trust between shepherds and guard dogs in their vigilance against wolves, as well as anxieties over the close relationship between wolves and dogs. Although Aesop used wolves to warn, criticize and moralize about human behaviour, his portrayals added to the wolf's image as a deceitful and dangerous animal. The Bible uses an image of a"
+    ],
+    "response":"Based on the provided context, the relationship between dogs and wolves includes:\n\n1. **Evolutionary\/Genetic Relationship**: Dogs were domesticated from wolves. A study identified 429 genes that differ between modern dogs and modern wolves, with these differences resulting from initial domestication rather than recent breed formation. These genes are linked to neural crest and central nervous system development, affecting traits like tameness, smaller jaws, floppy ears, and diminished craniofacial development\u2014characteristics that distinguish domesticated dogs from wolves.\n\n2. **Behavioral\/Competitive Relationship**: Wolves are known to kill dogs. The context notes that competition would favor wolves over dogs in areas where they coexist, though wolves typically live in pairs or small packs in areas with high human persecution, which limits such interactions.\n\nIn summary, dogs are domesticated descendants of wolves, and in situations where they encounter each other, wolves pose a predatory threat to dogs.",
+    "faithfulness":0.1333333333,
+    "answer_relevancy":0.9961898302
+  },
+  {
+    "user_input":"How many teeth do dogs have?",
+    "retrieved_contexts":[
+      "as few as three. The dog's skull has identical components regardless of breed type, but there is significant divergence in terms of skull shape between types. The three basic skull shapes are the elongated dolichocephalic type as seen in sighthounds, the intermediate mesocephalic or mesaticephalic type, and the very short and broad brachycephalic type exemplified by mastiff type skulls. The jaw contains around 42 teeth, and it has evolved for the consumption of flesh. Dogs use their carnassial teeth to cut food into bite-sized chunks, more especially meat. === Senses === Dogs' senses include vision, hearing, smell, taste, touch, and",
+      "Due to their long association with humans, dogs have gained the ability to thrive on a starch-rich diet that would be inadequate for other canids. Dogs have been bred for desired behaviors, sensory capabilities, and physical attributes. Dog breeds vary widely in shape, size, and color. They have the same number of bones (with the exception of the tail), powerful jaws that house around 42 teeth, and well-developed senses of smell, hearing, and sight. Compared to humans, dogs possess a superior sense of smell and hearing, but inferior visual acuity. Dogs perform many roles for humans, such as hunting, herding,"
+    ],
+    "response":"According to the context, dogs have around 42 teeth in their jaw.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.9437082124
+  },
+  {
+    "user_input":"What does the parasite-mediated domestication hypothesis suggest?",
+    "retrieved_contexts":[
+      "selection for domestic traits likely counteracted the homogenizing effect of gene flow from wild boars into pigs, and created domestication islands in the genome. The same process may apply to other domesticated animals. The 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals. Domestication involves taming, which has an endocrine component; and parasites can modify endocrine activity and microRNAs. Genes for resistance to parasites might be linked to those for the domestication syndrome; it is predicted that domestic animals are less resistant to parasites than their wild relatives. === Birds",
+      "pathogens === Selection of animals for visible traits may have undesired consequences for the genetics of domestic animals. A side effect of domestication has been zoonotic diseases. For example, cattle have given humanity various viral poxes, measles, and tuberculosis; pigs and ducks have contributed influenza; and horses have brought the rhinoviruses. Many parasites, too, have their origins in domestic animals. Alongside these, the advent of domestication resulted in denser human populations, which provided ripe conditions for pathogens to reproduce, mutate, spread, and eventually find a new host in humans. === On society === Scholars have expressed widely differing viewpoints on"
+    ],
+    "response":"According to the context, the 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals. \n\nThe hypothesis proposes that domestication involves taming, which has an endocrine component, and parasites can modify endocrine activity and microRNAs. It further predicts that genes for resistance to parasites might be linked to those for the domestication syndrome, and that domestic animals are less resistant to parasites than their wild relatives.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.7900997915
+  },
+  {
+    "user_input":"What's the difference between the 2023 and 2026 remote work policies?",
+    "retrieved_contexts":[
+      "Company Remote Work Policy (2023 Version) Employees are permitted to work remotely up to 2 days per week. Remote work requests must be submitted to a direct manager at least 3 days in advance. All remote work must be performed within the same state as the employee's registered office location.",
+      "Company Remote Work Policy (2026 Update) Effective this year, employees may work remotely up to 4 days per week, an increase from the previous limit. Remote work requests now only require 24 hours advance notice. Employees may work remotely from any state, provided they notify HR of their location for tax purposes."
+    ],
+    "response":"# Differences Between 2023 and 2026 Remote Work Policies\n\n| Aspect | 2023 Policy | 2026 Policy |\n|--------|------------|------------|\n| **Days per week** | Up to 2 days | Up to 4 days |\n| **Advance notice required** | 3 days | 24 hours |\n| **Geographic restrictions** | Must be within same state as registered office | Can be any state (with HR notification for tax purposes) |\n\nIn summary, the 2026 update significantly relaxed the remote work policy by doubling the allowed remote days, reducing the notice period needed, and removing state-based restrictions while adding a tax notification requirement.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.9829556898
+  },
+  {
+    "user_input":"What is espresso?",
+    "retrieved_contexts":[
+      "Espresso ( , Italian: [e\u02c8spr\u025bsso]) is a concentrated form of coffee produced by forcing hot water under high pressure through finely ground coffee beans. Originating in Italy, espresso has become one of the most popular coffee-brewing methods worldwide. It is characterized by its small serving size, typically 25\u201330 ml, and its distinctive layers: a dark body topped with a lighter-colored foam called \"crema\". Espresso machines use pressure to extract a highly concentrated coffee with a complex flavor profile in a short time, usually 25\u201330 seconds. The result is a beverage with a higher concentration of suspended and dissolved solids than",
+      "process is repeated until terminated by removing it from the heat, by an internal timer, or by a thermostat that turns off the heater when the entire pot reaches a certain temperature. The espresso method forces hot pressurized water through finely-ground coffee. As a result of brewing under high pressure (typically 9 bar), the espresso beverage is more concentrated (as much as 10 to 15 times the quantity of coffee to water as gravity-brewing methods can produce) and has a more complex physical and chemical constitution. A well-prepared espresso has a reddish-brown foam called crema that floats on the surface."
+    ],
+    "response":"# What is Espresso?\n\nBased on the provided context, espresso is a concentrated coffee drink with several defining characteristics:\n\n**Basic Form:**\n- In its most basic form, espresso is served alone as a \"shot\" or \"short black\"\n\n**Caffeine Content:**\n- A typical 30 milliliters (1 U.S. fluid ounce) serving of espresso contains approximately 65 milligrams of caffeine\n\n**Unique Physical Structure:**\n- Unlike other coffee drinks, espresso contains three distinct phases:\n  1. An emulsion of oil droplets\n  2. Suspended solids\n  3. A layer of gas bubbles or foam\n- The dispersed oil droplets are perceived as creamy and contribute to the drink's \"body\"\n\n**Variations:**\n- Espresso can be served with hot water added (called caff\u00e8 americano)\n- Milk can be added in various forms to espresso (such as steamed milk, which makes a caff\u00e8 latte)\n- It can be used as the base for various other coffee drinks",
+    "faithfulness":0.0714285714,
+    "answer_relevancy":0.9185450629
+  },
+  {
+    "user_input":"Why were dogs originally domesticated, according to the commensal pathway theory?",
+    "retrieved_contexts":[
+      "Eurasian wolves than to American wolves. The dog is a domestic animal that likely travelled a commensal pathway into domestication (i.e. humans initially neither benefitted nor were harmed by wild dogs eating refuse from their camps). The questions of when and where dogs were first domesticated remains uncertain. Genetic studies suggest a domestication process commencing over 25,000 years ago, in one or several wolf populations in either Europe, the high Arctic, or eastern Asia. In 2021, a literature review of the current evidence infers that the dog was domesticated in Siberia 23,000 years ago by ancient North Siberians, then later",
+      "domesticates followed into domestication: commensals, adapted to a human niche (e.g., dogs, cats, possibly pigs) prey animals sought for food (e.g., sheep, goats, cattle, water buffalo, yak, pig, reindeer, llama and alpaca) animals targeted for draft and riding (e.g., horse, donkey, camel). Humans did not intend to domesticate mammals from either the commensal or prey pathways, or at least they did not envision a domesticated animal would result from it. In both of those cases, humans became entangled with these species as the relationship between them intensified, and humans' role in their survival and reproduction gradually led to formalized animal"
+    ],
+    "response":"According to the commensal pathway theory described in the context, dogs were **not intentionally domesticated**. Instead, the domestication occurred through a commensal relationship where \"humans initially neither benefitted nor were harmed by wild dogs eating refuse from their camps.\"\n\nIn other words, dogs were originally attracted to human settlements to scavenge food scraps, and through this relationship of proximity and dependence on human refuse, they gradually became domesticated over time. The context explicitly states that \"Humans did not intend to domesticate mammals from either the commensal or prey pathways,\" and that \"humans became entangled with these species as the relationship between them intensified.\"\n\nSo the commensal pathway theory suggests dogs domesticated themselves, so to speak, by exploiting an available food source near human camps, rather than being deliberately domesticated for any particular purpose.",
+    "faithfulness":0.7777777778,
+    "answer_relevancy":0.9651785556
+  },
+  {
+    "user_input":"What's the product code for the coffee maker, and how many units were made?",
+    "retrieved_contexts":[
+      "The company's internal product code for the new coffee maker is XJ-4471. This model was released in a limited batch of only 200 units. The device operates at 850 watts and uses a proprietary filter size called F-22 mini. Customer support requests for this model should reference ticket prefix CM-XJ.",
+      "brewed in bulk, rather than in individual servings. === Bezzera's invention === A machine that could brew individual servings came in the new century. In 1901, the inventor Luigi Bezzera of Milan filed a patent for his coffee maker. This machine contained a boiler, which when heated generated steam that would direct water through one of several heads, cooled on its path to a temperature considered more suitable for brewing. To the heads, a portafilter containing compressed coffee could be attached, producing coffee in individual portions, that is, 'expressly' for the customer. In 1903, another Milanese man, Desiderio Pavoni, purchased"
+    ],
+    "response":"According to the context, the product code for the coffee maker is **XJ-4471**, and **200 units** were made in the limited batch release.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.8949002176
+  },
+  {
+    "user_input":"Do cats have a social survival strategy like herd behavior?",
+    "retrieved_contexts":[
+      "do not have a social survival strategy or herd behavior, they always hunt alone. Life in proximity to humans and other domestic animals has led to a symbiotic social adaptation in cats, and cats may express great affection toward humans or other animals. Ethologically, a cat's human keeper functions as a mother surrogate. Adult cats live in a type of extended kittenhood, a form of behavioral neoteny. Their high-pitched sounds may mimic the cries of a hungry human infant, making them particularly difficult for humans to ignore. Some pet cats are poorly socialized. In particular, older cats may show aggressiveness",
+      "females' territories. These territories are marked by urine spraying, rubbing objects at head height with secretions from facial glands, and by defecation. Between these territories are neutral areas where cats watch and greet one another without territorial conflicts. Outside these neutral areas, territory holders usually chase away stranger cats, at first by staring, hissing, and growling, and, if that does not work, by short and violent, noisy attacks. Because cats do not have a social survival strategy or herd behavior, they always hunt alone. Life in proximity to humans and other domestic animals has led to a symbiotic social adaptation"
+    ],
+    "response":"No, according to the context, cats do not have a social survival strategy or herd behavior. The text explicitly states: \"Because cats do not have a social survival strategy or herd behavior, they always hunt alone.\"",
+    "faithfulness":0.8,
+    "answer_relevancy":0.9927540018
+  },
+  {
+    "user_input":"What happened during the French officer's coffee voyage in 1723?",
+    "retrieved_contexts":[
+      "single plant is believed to be the ancestor of millions of coffee trees now grown throughout Central and South America. Brazil eventually became the world's largest coffee producer, a position it still holds today. The specific year the French officer completed this journey was 1723, and the plant survived a difficult voyage that included a storm, a suspected saboteur, and a severe drought at sea.",
+      "the 17th century, coffee had spread to Europe, where it was initially met with suspicion by some religious leaders before becoming widely accepted. The Dutch were among the first Europeans to successfully cultivate coffee outside of Arabia, establishing plantations in Java. Coffee then made its way to the Americas in the 18th century, brought by a French naval officer who transported a single coffee plant across the Atlantic Ocean. That single plant is believed to be the ancestor of millions of coffee trees now grown throughout Central and South America. Brazil eventually became the world's largest coffee producer, a position"
+    ],
+    "response":"# The French Officer's Coffee Voyage in 1723\n\nDuring the French officer's coffee voyage in 1723, the single coffee plant experienced several challenges:\n\n1. **A storm** occurred during the journey\n2. **A suspected saboteur** was involved\n3. **A severe drought at sea** affected the voyage\n\nDespite these difficult conditions, the plant survived the journey across the Atlantic Ocean, and it went on to become the ancestor of millions of coffee trees grown throughout Central and South America.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.8790474308
+  },
+  {
+    "user_input":"What percentage of caffeine users develop tolerance to its sleep effects?",
+    "retrieved_contexts":[
+      "for daily, regular caffeine users and high caffeine users. High doses of caffeine (750 to 1200 mg\/day spread throughout the day) have been shown to produce complete tolerance to some, but not all of the effects of caffeine. Doses as low as 100 mg\/day, such as a 6 oz (170 g) cup of coffee or two to three 12 oz (340 g) servings of caffeinated soft-drink, may continue to cause sleep disruption, among other intolerances. Non-regular caffeine users have the least caffeine tolerance for sleep disruption. Some coffee drinkers develop tolerance to its undesired sleep-disrupting effects, but others apparently do",
+      "sleep disruption, among other intolerances. Non-regular caffeine users have the least caffeine tolerance for sleep disruption. Some coffee drinkers develop tolerance to its undesired sleep-disrupting effects, but others apparently do not. === Risk of other diseases === A neuroprotective effect of caffeine against Alzheimer's disease and dementia is possible but the evidence is inconclusive. Caffeine may lessen the severity of acute mountain sickness if taken a few hours prior to attaining a high altitude. One meta analysis has found that caffeine consumption is associated with a reduced risk of type 2 diabetes. Regular caffeine consumption may reduce the risk of"
+    ],
+    "response":"The context does not provide a specific percentage of caffeine users who develop tolerance to sleep-disrupting effects of caffeine.\n\nThe context only states that \"Some coffee drinkers develop tolerance to its undesired sleep-disrupting effects, but others apparently do not.\" This indicates that tolerance development varies among individuals, but no quantitative data or percentage is given.",
+    "faithfulness":1.0,
+    "answer_relevancy":0.0
+  },
+  {
+    "user_input":"What is domestication syndrome?",
+    "retrieved_contexts":[
+      "anthropogenic niche\". It is the process by which a nonhuman population adapts to an environment created through human activity. Furthermore, \"the term 'domestic' should refer solely to those populations that are obligate synanthropes and have adapted to an anthropogenic environment to the extent that only sink populations (in which the death rate is higher than the birth rate) exist outside of that niche.\" Domestication syndrome is the suite of phenotypic traits that arose during the initial domestication process and which distinguish domesticated species including crops from their wild ancestors. It can also mean a set of differences now observed in",
+      "wild populations; some of these differences constitute the domestication syndrome, traits presumed essential in the early stages of domestication, while others represent later improvement traits. Domesticated mammals in particular tend to be smaller and less aggressive than their wild counterparts; other common traits are floppy ears, a smaller brain, and a shorter muzzle. Domestication traits are generally fixed within all domesticates, and were selected during the initial episode of domestication of that animal or plant, whereas improvement traits are present only in a proportion of domesticates, though they may be fixed in individual breeds or regional populations. Certain animal species,"
+    ],
+    "response":"According to the context provided, domestication syndrome is the suite of phenotypic traits that arose during the initial domestication process and which distinguish domesticated species including crops from their wild ancestors. It can also refer to a set of differences now observed in domesticated organisms compared to their wild counterparts.\n\nThe context provides specific examples of what domestication syndrome affects:\n- In animals: genes for behavior, making them less aggressive\n- In plants: genes for morphology, such as increasing seed size and stopping the shattering of cereal seedheads",
+    "faithfulness":0.4285714286,
+    "answer_relevancy":0.784617064
+  },
+  {
+    "user_input":"Can dogs communicate with humans?",
+    "retrieved_contexts":[
+      "about 5 to 12 weeks of age, they alter their focus from dogs to humans. Belly exposure in dogs can be a defensive behavior that can lead to a bite or to seek comfort. Humans communicate with dogs by using vocalization, hand signals, and body posture. With their acute sense of hearing, dogs rely on the auditory aspect of communication for understanding and responding to various cues, including the distinctive barking patterns that convey different messages. A study using functional magnetic resonance imaging (fMRI) has shown that dogs respond to both vocal and nonvocal voices using the brain's region towards",
+      "failing to complete an impossible version of the same task they had been trained to solve. Wolves, under the same situation, avoided staring at humans altogether. === Communication === Dog communication is the transfer of information between dogs, as well as between dogs and humans. Communication behaviors of dogs include eye gaze, facial expression, vocalization, body posture (including movements of bodies and limbs), and gustatory communication (scents, pheromones, and taste). Dogs mark their territories by urinating on them, which is more likely when entering a new environment. Both sexes of dogs may also urinate to communicate anxiety or frustration, submissiveness,"
+    ],
+    "response":"Yes, according to the context, dogs can communicate with humans. \n\nThe context states that \"Humans communicate with dogs by using vocalization, hand signals, and body posture\" and defines \"Dog communication\" as \"the transfer of information between dogs, as well as between dogs and humans.\"\n\nThe context also describes specific communication behaviors dogs use, including \"eye gaze, facial expression, vocalization, body posture (including movements of bodies and limbs), and gustatory communication (scents, pheromones, and taste).\"\n\nAdditionally, research mentioned in the context shows that \"dogs respond to both vocal and nonvocal voices using the brain's region,\" indicating they can process and respond to human communication.",
+    "faithfulness":0.9444444444,
+    "answer_relevancy":1.0
+  }
+]
