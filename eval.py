@@ -81,7 +81,7 @@ Does the actual answer's CONTENT match what's expected? Reply with ONLY one word
 
     votes = []
     for _ in range(3):
-        verdict = ask_llm(judge_prompt, [])
+        verdict, _ = ask_llm(judge_prompt, [])
         votes.append(verdict.strip().upper())
 
     pass_count = sum(1 for v in votes if "PASS" in v)
@@ -100,7 +100,7 @@ for case in eval_set:
         case["expected_source"] in all_retrieved_sources
     )
 
-    answer = ask_llm(case["question"], retrieved_texts)
+    answer, _ = ask_llm(case["question"], retrieved_texts)
 
     if "must_contain" in case:
         answer_lower = answer.lower()

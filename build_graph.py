@@ -15,7 +15,7 @@ Text: {text}
 Reply with ONLY a JSON list of triples, like: [["Dog", "descended_from", "Wolf"], ["Coffee", "contains", "Caffeine"]]
 If no clear relationships exist, reply with an empty list: []"""
 
-    response = ask_llm(prompt, [])
+    response, _ = ask_llm(prompt, [])
     try:
         cleaned = response.strip().strip("```json").strip("```").strip()
         triples = json.loads(cleaned)

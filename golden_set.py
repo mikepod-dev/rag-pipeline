@@ -28,7 +28,7 @@ questions = [
 results = []
 for q in questions:
     retrieved = hybrid_search_with_rerank(q)
-    answer = ask_llm(q, retrieved["documents"][0])
+    answer, _ = ask_llm(q, retrieved["documents"][0])
     results.append({"question": q, "answer": answer})
     print(f"Done: {q}")
 

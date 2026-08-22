@@ -316,7 +316,7 @@ def ask_llm(question, context_chunks):
     cache_key = question.lower().strip()
     if cache_key in answer_cache:
         cache_hits += 1
-        return answer_cache[cache_key]
+        return answer_cache[cache_key], 0.0
 
     context = "\n\n".join(context_chunks)
 
@@ -345,17 +345,22 @@ Question: {question}"""
 
     answer_text = data["choices"][0]["message"]["content"]
 
+    answer_cache[cache_key] = answer_text
+    return answer_text, call_cost
+
+
+def log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "question": question,
-        "answer": answer_text,
-        "cost": call_cost,
+        "answer": answer,
+        "cost": cost,
+        "latency_ms": latency_ms,
+        "success": success,
+        "retrieval_count": retrieval_count,
     }
     with open("query_log.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
-
-    answer_cache[cache_key] = answer_text
-    return answer_text
 
 
 def self_grade_answer(question, answer, retrieved_context):
@@ -370,7 +375,7 @@ If the answer says information is missing, check: does the retrieved context act
 
 Reply with ONLY one word: SUFFICIENT or INSUFFICIENT."""
 
-    grade = ask_llm(grade_prompt, [])
+    grade, _ = ask_llm(grade_prompt, [])
     return "SUFFICIENT" in grade.strip().upper()
 
 
@@ -382,7 +387,7 @@ Insufficient answer: {failed_answer}
 
 Rewrite the question using different words, broader terms, or a more direct phrasing that might retrieve better source material. Reply with ONLY the rewritten question, nothing else."""
 
-    rewritten = ask_llm(rewrite_prompt, [])
+    rewritten, _ = ask_llm(rewrite_prompt, [])
     return rewritten.strip()
 
 
@@ -393,7 +398,7 @@ def agentic_answer(question, max_retries=2):
     for attempt in range(max_retries + 1):
         results = hybrid_search_with_rerank(current_question)
         retrieved_texts = results["documents"][0]
-        answer = ask_llm(current_question, retrieved_texts)
+        answer, _ = ask_llm(current_question, retrieved_texts)
 
         is_sufficient = self_grade_answer(question, answer, retrieved_texts)
         attempts.append(
@@ -416,9 +421,24 @@ def agentic_answer(question, max_retries=2):
 
 @celery_app.task(name="pipeline.answer_question_task")
 def answer_question_task(question):
-    results = hybrid_search_with_rerank(question)
-    retrieved_texts = results["documents"][0]
-    answer = ask_llm(question, retrieved_texts)
+    start = time.time()
+    success = True
+    answer = None
+    cost = 0.0
+    retrieval_count = 0
+
+    try:
+        results = hybrid_search_with_rerank(question)
+        retrieved_texts = results["documents"][0]
+        retrieval_count = len(retrieved_texts)
+        answer, cost = ask_llm(question, retrieved_texts)
+    except Exception:
+        success = False
+        raise
+    finally:
+        latency_ms = (time.time() - start) * 1000
+        log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count)
+
     return {"question": question, "answer": answer}
 
 
@@ -437,14 +457,28 @@ if __name__ == "__main__":
             print(f"\nError: {error_message}")
             continue
 
-        retrieval_start = time.time()
-        results = hybrid_search_with_rerank(query)
-        retrieved_texts = results["documents"][0]
-        retrieval_time = time.time() - retrieval_start
+        overall_start = time.time()
+        success = True
+        answer = None
+        cost = 0.0
+        retrieval_count = 0
 
-        generation_start = time.time()
-        answer = ask_llm(query, retrieved_texts)
-        generation_time = time.time() - generation_start
+        try:
+            retrieval_start = time.time()
+            results = hybrid_search_with_rerank(query)
+            retrieved_texts = results["documents"][0]
+            retrieval_count = len(retrieved_texts)
+            retrieval_time = time.time() - retrieval_start
 
-        print("\nANSWER:", answer)
-        print(f"\n(Retrieval: {retrieval_time:.2f}s | Generation: {generation_time:.2f}s)")
+            generation_start = time.time()
+            answer, cost = ask_llm(query, retrieved_texts)
+            generation_time = time.time() - generation_start
+
+            print("\nANSWER:", answer)
+            print(f"\n(Retrieval: {retrieval_time:.2f}s | Generation: {generation_time:.2f}s)")
+        except Exception as e:
+            success = False
+            print(f"\nError: {e}")
+        finally:
+            latency_ms = (time.time() - overall_start) * 1000
+            log_query_metrics(query, answer, cost, latency_ms, success, retrieval_count)
