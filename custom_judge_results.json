@@ -1,0 +1,122 @@
+[
+  {
+    "question": "How many breeds of dogs are there?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "Both factual claims in the answer are directly supported by the retrieved context. Context 1 explicitly states 'There are around 450 different breeds of dogs,' and Context 2 reinforces this with 'There are around 450 official dog breeds, the most of any mammal.' Both retrieved chunks are highly relevant and directly answer the specific question asked."
+  },
+  {
+    "question": "What's the scientific name for the wolf?",
+    "faithfulness": 0.5,
+    "context_precision": 0.5,
+    "rationale": "The answer correctly identifies the scientific name as Canis lupus, which is explicitly stated in Context 1. However, the answer makes two ungrounded claims: (1) it states the nominate subspecies is the Eurasian wolf (C. l. lupus), which does not appear in the retrieved context, and (2) it references Wozencraft listing 38 subspecies, which also does not appear in the provided context. Context 1 is directly relevant and answers the core question, but Context 2 is primarily about etymology and Germanic naming practices, making the retrieved context only partially precise for this specific query."
+  },
+  {
+    "question": "Why do cats sleep so much?",
+    "faithfulness": 1.0,
+    "context_precision": 0.5,
+    "rationale": "The answer's central claim\u2014that cats sleep so much because they conserve energy\u2014is directly supported by Context 1. However, Context 2 merely restates the sleep duration without explaining why, making it topically related but not useful for answering the specific 'why' question. The answer is faithful to what was retrieved, though only half the retrieved context was actually relevant."
+  },
+  {
+    "question": "What color can a wolf's fur be?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "Every claim in the answer is directly supported by the retrieved context. The answer correctly identifies white, brown, grey, and black as usual colors (Context 1), notes that arctic subspecies may be nearly all white (Context 1), explains that coat color is determined by guard hairs (Context 2), and accurately describes age-related color changes (Context 2). Both retrieved context chunks are highly relevant and directly answer the question about wolf fur coloration."
+  },
+  {
+    "question": "How long has coffee been cultivated?",
+    "faithfulness": 0.3,
+    "context_precision": 0.5,
+    "rationale": "The answer makes several claims unsupported by the retrieved context: (1) it claims the context states 'The history of coffee cultivation dates back centuries' - this exact phrase does not appear in the provided context; (2) it references a legend about Kaldi the goat herder and coffee's discovery in Ethiopia - this information is completely absent from the retrieved chunks; (3) it mentions spread to the Arabian Peninsula by the 15th century and Europe in the 17th century - only Java cultivation in the 17th century and Americas from the 18th century are actually in the context. The only grounded claim is that coffee was cultivated in Java in the 17th century and the Americas from the 18th century. The retrieved context has limited precision since Context 1 focuses on modern cultivation methods rather than historical timeline, while Context 2 contains the only relevant historical information provided."
+  },
+  {
+    "question": "What continent did coffee originate from?",
+    "faithfulness": 1.0,
+    "context_precision": 0.5,
+    "rationale": "The answer correctly identifies Arabia as the origin continent based on explicit mentions in Context 1 ('outside of Arabia' implies Arabia as the original location). However, only 1 of 2 retrieved context chunks were relevant to answering this specific question\u2014Context 2 adds details about the 1723 journey but doesn't address the origin question, making the context precision modest."
+  },
+  {
+    "question": "Do dogs have a better sense of smell than humans?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer is entirely faithful to the retrieved context. All three factual claims\u2014that dogs have roughly 40 times more smell-sensitive receptors than humans (with specific range), that smell is the most prominent sense for dogs, and that the dog brain is dominated by the olfactory cortex while the human brain is dominated by visual cortex\u2014are directly quoted or explicitly stated in the provided chunks. Both retrieved context chunks are relevant and useful for answering this specific question about canine olfactory superiority."
+  },
+  {
+    "question": "What is the DSM-5 diagnosis related to caffeine?",
+    "faithfulness": 1.0,
+    "context_precision": 0.85,
+    "rationale": "The answer accurately reflects all claims supported by the retrieved context: caffeine-use disorder is defined as dependence characterized by failure to control consumption despite negative consequences (Context 1), and it is classified as a 'condition for further study' rather than an official diagnosis due to unclear clinical significance (Context 1). Context 2 mentions caffeine-induced anxiety disorder as a DSM-5 diagnosis, which is relevant additional information but not directly addressed in the answer. Both contexts are topically relevant, though Context 2's focus on anxiety and depression effects is tangential to the specific question about DSM-5 diagnostic classifications."
+  },
+  {
+    "question": "What's the relationship between dogs and wolves?",
+    "faithfulness": 0.15,
+    "context_precision": 0.5,
+    "rationale": "The answer makes several specific factual claims that are NOT supported by the retrieved context: (1) '429 genes that differ between modern dogs and modern wolves' - this exact number appears nowhere in the context; (2) genes 'linked to neural crest and central nervous system development' - not mentioned; (3) specific traits like 'tameness, smaller jaws, floppy ears' - not in the context; (4) 'wolves typically live in pairs or small packs in areas with high human persecution' - not stated in the retrieved chunks. The only claim genuinely grounded in context is that dogs descended from an ancient wolf population distinct from modern wolves. Context 1 is relevant to the question but incomplete; Context 2 is about Aesop's fables and cultural symbolism, not the actual biological relationship."
+  },
+  {
+    "question": "How many teeth do dogs have?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer directly and accurately states that dogs have around 42 teeth, which is explicitly supported by both retrieved context chunks (Context 1: 'The jaw contains around 42 teeth' and Context 2: 'powerful jaws that house around 42 teeth'). Both chunks are highly relevant and useful for answering the specific question about dog teeth count."
+  },
+  {
+    "question": "What does the parasite-mediated domestication hypothesis suggest?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer accurately captures all key claims from Context 1 about the parasite-mediated domestication hypothesis: that endoparasites could have mediated mammal domestication, that domestication involves taming with an endocrine component, that parasites can modify endocrine activity and microRNAs, that parasite resistance genes might be linked to domestication syndrome genes, and that domestic animals are predicted to be less resistant to parasites. All factual claims are directly supported by the retrieved text."
+  },
+  {
+    "question": "What's the difference between the 2023 and 2026 remote work policies?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "Every factual claim in the answer is directly supported by the retrieved context. The three differences identified (2 vs 4 days per week, 3 days vs 24 hours notice, and state restrictions removed with tax notification added) are all explicitly stated in the context chunks. Both retrieved contexts were highly relevant and directly answered the specific question asked."
+  },
+  {
+    "question": "What is espresso?",
+    "faithfulness": 0.35,
+    "context_precision": 0.5,
+    "rationale": "The answer contains several claims not supported by the retrieved context: the specific caffeine content (65mg), the three-phase structure with emulsion of oil droplets and gas bubbles, and variations like caff\u00e8 americano and caff\u00e8 latte. The retrieved context does support that espresso is concentrated coffee made by forcing hot water through grounds under pressure, has a 25-30ml serving size, and features crema foam, but most of the answer's detailed content is unsourced. The retrieved context is partially relevant (covering the basic definition) but incomplete for the full scope of claims made in the answer."
+  },
+  {
+    "question": "Why were dogs originally domesticated, according to the commensal pathway theory?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer accurately reflects all key claims from the retrieved context: (1) dogs followed a commensal pathway into domestication, (2) humans initially neither benefitted nor were harmed by wild dogs eating refuse, (3) domestication was not intentional, and (4) humans became entangled with the species as the relationship intensified. All factual claims are directly supported by the context chunks provided."
+  },
+  {
+    "question": "What's the product code for the coffee maker, and how many units were made?",
+    "faithfulness": 1.0,
+    "context_precision": 0.5,
+    "rationale": "The answer correctly identifies both the product code (XJ-4471) and the number of units (200) from Context 1, with both facts explicitly stated and accurately reported. However, only Context 1 is relevant to answering this specific question; Context 2 discusses the historical development of coffee makers by Bezzera and Pavoni, which is topically related to coffee makers but completely irrelevant to the question about a specific modern product's code and production volume, resulting in 50% precision."
+  },
+  {
+    "question": "Do cats have a social survival strategy like herd behavior?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer directly and accurately quotes the retrieved context, which explicitly states that cats do not have a social survival strategy or herd behavior and hunt alone. Both retrieved context chunks contain this same factual claim, making it a clearly supported statement. The answer faithfully represents what the context says."
+  },
+  {
+    "question": "What happened during the French officer's coffee voyage in 1723?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "Every factual claim in the answer is directly supported by Context 1, which explicitly states that the plant 'survived a difficult voyage that included a storm, a suspected saboteur, and a severe drought at sea' in 1723, and that it became 'the ancestor of millions of coffee trees now grown throughout Central and South America.' Both retrieved contexts are relevant and useful for answering this question about the French officer's 1723 coffee voyage."
+  },
+  {
+    "question": "What percentage of caffeine users develop tolerance to its sleep effects?",
+    "faithfulness": 1.0,
+    "context_precision": 0.5,
+    "rationale": "The answer correctly and honestly identifies that the retrieved context does not contain a specific percentage answering the question\u2014this is a well-calibrated refusal supported by the actual context. The answer accurately quotes the relevant passage showing that tolerance varies individually but no percentage is provided. However, only about half of the retrieved context is directly relevant; while Context 1 and 2 both address caffeine tolerance and sleep effects, Context 2 also includes unrelated material about Alzheimer's disease, mountain sickness, and diabetes that does not help answer this specific question."
+  },
+  {
+    "question": "What is domestication syndrome?",
+    "faithfulness": 0.75,
+    "context_precision": 0.5,
+    "rationale": "The answer's core definition of domestication syndrome is well-supported by the retrieved context. However, the specific examples about 'genes for behavior making animals less aggressive' and 'plants: genes for morphology, such as increasing seed size and stopping the shattering of cereal seedheads' are NOT present in the retrieved context\u2014only general mentions of aggression and smaller/floppy-eared traits are provided. The context precision is low because while both chunks are topically related to domestication syndrome, they don't provide comprehensive coverage needed to fully answer the question with the specific examples the answer claims."
+  },
+  {
+    "question": "Can dogs communicate with humans?",
+    "faithfulness": 1.0,
+    "context_precision": 1.0,
+    "rationale": "The answer is fully supported by the retrieved context. Every claim is directly quoted or clearly implied: the context explicitly states humans communicate with dogs via vocalization, hand signals, and body posture; defines dog communication as transfer of information between dogs and humans; lists specific communication behaviors (eye gaze, facial expression, vocalization, body posture, gustatory communication); and mentions dogs' brain response to vocal and nonvocal voices. Both retrieved chunks are directly relevant and useful for answering this question about dog-human communication."
+  }
+]
