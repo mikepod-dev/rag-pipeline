@@ -1,0 +1,521 @@
+[
+  {
+    "question": "How many breeds of dogs are there?",
+    "score": 1.0,
+    "total_claims": 2,
+    "grounded_claims": 2,
+    "claims_matrix": [
+      {
+        "claim_text": "There are around 450 different breeds of dogs",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "This represents the most breeds of any mammal",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes two distinct factual claims: (1) there are around 450 different breeds of dogs, and (2) this represents the most breeds of any mammal. Let me verify each against the retrieved context. Claim 1: Context 1 states 'There are around 450 different breeds of dogs.' Context 2 states 'There are around 450 official dog breeds.' This claim is directly and explicitly supported. Claim 2: Context 2 states 'There are around 450 official dog breeds, the most of any mammal.' This is also directly and explicitly stated in the retrieved context. Both claims are grounded in the provided materials."
+  },
+  {
+    "question": "What's the scientific name for the wolf?",
+    "score": 0.3333333333333333,
+    "total_claims": 3,
+    "grounded_claims": 1,
+    "claims_matrix": [
+      {
+        "claim_text": "The scientific name for the wolf is Canis lupus",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The nominate subspecies is the Eurasian wolf (C. l. lupus)",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Wozencraft listed 38 subspecies of C. lupus under the biological common name of wolf",
+        "is_grounded": false
+      }
+    ],
+    "internal_rationale": "The answer makes two distinct factual claims: (1) The scientific name for the wolf is 'Canis lupus' (abbreviated as C. lupus), and (2) The nominate subspecies is the Eurasian wolf (C. l. lupus). Let me check if these are supported by the retrieved context.\n\nFor claim 1: The context explicitly states 'He classified the domestic dog as Canis familiaris, and the wolf as Canis lupus.' This directly and unambiguously supports the claim that the scientific name for the wolf is Canis lupus.\n\nFor claim 2: The answer states that 'the nominate subspecies is the Eurasian wolf (C. l. lupus)' and that 'Wozencraft listed 38 subspecies of C. lupus under the biological common name of wolf.' However, the retrieved context does NOT mention anything about the Eurasian wolf being the nominate subspecies, nor does it mention Wozencraft or any listing of 38 subspecies. The context only establishes that Linnaeus classified the wolf as Canis lupus in 1758; it does not provide information about subspecies classifications or Wozencraft's work.\n\nThe first claim is grounded in the context. The second claim about the Eurasian wolf and Wozencraft's classification is not supported by the retrieved context."
+  },
+  {
+    "question": "Why do cats sleep so much?",
+    "score": 1.0,
+    "total_claims": 2,
+    "grounded_claims": 2,
+    "claims_matrix": [
+      {
+        "claim_text": "Cats conserve energy by sleeping more than most animals, especially as they grow older",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The typical sleep duration for cats is 12 to 16 hours per day, with some cats sleeping as much as 20 hours",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes two distinct factual claims: (1) Cats conserve energy by sleeping more than most animals, especially as they grow older, and (2) The typical sleep duration is 12 to 16 hours per day, with some cats sleeping as much as 20 hours. Let me verify each against the retrieved context.\n\nClaim 1: The exact phrase 'Cats conserve energy by sleeping more than most animals, especially as they grow older' appears verbatim in Context 1. This is directly supported.\n\nClaim 2: The sleep duration range of 12-16 hours appears in both Context 1 ('usually between 12 and 16 hours') and Context 2 ('Adult cats sleep 12 to 16 hours a day'). The claim about 'some cats sleeping as much as 20 hours' also appears explicitly in Context 1 ('Some cats can sleep as much as 20 hours'). This is directly supported.\n\nBoth claims are explicitly stated in the retrieved context."
+  },
+  {
+    "question": "What color can a wolf's fur be?",
+    "score": 1.0,
+    "total_claims": 5,
+    "grounded_claims": 5,
+    "claims_matrix": [
+      {
+        "claim_text": "Wolf fur is usually a mottled combination of white, brown, grey, and black",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Arctic subspecies of wolves may be nearly all white",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "A wolf's coat color is determined by its guard hairs",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Wolves usually have some hairs that are white, brown, grey, and black",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Older wolves generally develop more white hairs on the tip of the tail, along the nose, and on the forehead",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims about wolf fur color: (1) Wolf fur is usually a mottled combination of white, brown, grey, and black; (2) Arctic subspecies may be nearly all white; (3) Coat color is determined by guard hairs; (4) Wolves usually have some hairs that are white, brown, grey, and black; (5) Older wolves develop more white hairs on the tip of the tail, nose, and forehead. Let me check each against the retrieved context:\n\n(1) 'usually mottled white, brown, grey, and black' - Context 1 explicitly states: 'The wolf's fur is usually mottled white, brown, grey, and black' - GROUNDED.\n\n(2) 'Arctic subspecies may be nearly all white' - Context 1 explicitly states: 'although subspecies in the arctic region may be nearly all white' - GROUNDED.\n\n(3) 'Coat color is determined by guard hairs' - Context 2 explicitly states: 'A wolf's coat colour is determined by its guard hairs' - GROUNDED.\n\n(4) 'Wolves usually have some hairs that are white, brown, grey and black' - Context 2 explicitly states: 'Wolves usually have some hairs that are white, brown, grey and black' - GROUNDED.\n\n(5) 'Older wolves develop more white hairs on tip of tail, nose, and forehead' - Context 2 explicitly states: 'Older wolves generally have more white hairs on the tip of the tail, along the nose, and on the forehead' - GROUNDED.\n\nAll claims in the answer are directly supported by the retrieved context."
+  },
+  {
+    "question": "How long has coffee been cultivated?",
+    "score": 0.42857142857142855,
+    "total_claims": 7,
+    "grounded_claims": 3,
+    "claims_matrix": [
+      {
+        "claim_text": "Coffee cultivation dates back centuries",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "There is a legend about coffee's discovery in Ethiopia by a goat herder named Kaldi",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Coffee spread to the Arabian Peninsula by the 15th century",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Coffee reached Europe in the 17th century",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Coffee cultivation began in Java in the 17th century",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Coffee reached the Americas from the 18th century",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The context does not specify exactly how many centuries or years coffee has been cultivated",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several claims: (1) 'coffee cultivation dates back centuries' - this is a general claim not explicitly stated in the retrieved context; (2) 'The earliest point mentioned in the history is a legend about coffee's discovery in Ethiopia by a goat herder named Kaldi' - this legend is NOT mentioned in the retrieved context; (3) 'followed by its spread to the Arabian Peninsula by the 15th century' - NOT in the retrieved context; (4) 'then to Europe in the 17th century' - the context does mention cultivation 'in Java in the 17th century' but does not mention Europe; (5) 'and finally to the Americas in the 18th century' - the context states 'from the 18th century' regarding the Americas, which aligns; (6) 'the context does not specify exactly how many centuries or years coffee has been cultivated' - this is a meta-claim about what the context contains. The retrieved context only explicitly states that coffee was 'cultivated in Java in the 17th century and the Americas from the 18th century.' The answer introduces substantial historical information (Ethiopia, Kaldi legend, Arabian Peninsula, Europe) that is completely absent from the provided context."
+  },
+  {
+    "question": "What continent did coffee originate from?",
+    "score": 0.0,
+    "total_claims": 2,
+    "grounded_claims": 0,
+    "claims_matrix": [
+      {
+        "claim_text": "Coffee originated from Arabia",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "The context indicates that Arabia was the original source of coffee",
+        "is_grounded": false
+      }
+    ],
+    "internal_rationale": "The answer makes two main factual claims: (1) that coffee originated from Arabia, and (2) that this is supported by the retrieved context. Let me examine the context carefully. The context states 'The Dutch were among the first Europeans to successfully cultivate coffee outside of Arabia,' which implies Arabia was a source of coffee. However, the context does NOT explicitly state that coffee originated in Arabia\u2014it only shows that coffee was cultivated in Arabia and that Europeans cultivated it 'outside of Arabia.' The context also mentions coffee 'had spread to Europe' but doesn't clearly state the original origin continent. The context does not explicitly say 'coffee originated in Arabia' or identify Arabia's continent. While the answer's inference that Arabia (a region in Asia) was the source is reasonable based on historical knowledge and the context's implications, the retrieved context does not directly and unambiguously state that coffee originated there or specify that this origin was in Asia/a particular continent. The answer claims the context 'indicates that Arabia was the original source,' but the context only indicates Arabia was one source location from which it spread, not necessarily the original birthplace."
+  },
+  {
+    "question": "Do dogs have a better sense of smell than humans?",
+    "score": 1.0,
+    "total_claims": 6,
+    "grounded_claims": 6,
+    "claims_matrix": [
+      {
+        "claim_text": "Dogs have a better sense of smell than humans",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Dogs have roughly forty times more smell-sensitive receptors than humans",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Dogs have between 125 million to nearly 300 million smell-sensitive receptors in some breeds like bloodhounds",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Smell is the most prominent sense in dogs",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The dog brain is dominated by a large olfactory cortex",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The human brain is dominated by a large visual cortex",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims: (1) Dogs have a better sense of smell than humans; (2) Dogs have roughly forty times more smell-sensitive receptors than humans; (3) Dogs have between 125 million to nearly 300 million smell-sensitive receptors in some breeds like bloodhounds; (4) Smell is the most prominent sense in dogs; (5) The dog brain is dominated by a large olfactory cortex; (6) The human brain is dominated by a large visual cortex. Let me check each against the retrieved context: (1) Context 2 explicitly states 'dogs possess a superior sense of smell' compared to humans - GROUNDED. (2) Context 1 directly states 'Dogs have roughly forty times more smell-sensitive receptors than humans' - GROUNDED. (3) Context 1 states this ranges 'from about 125 million to nearly 300 million in some dog breeds, such as bloodhounds' - GROUNDED. (4) Context 1 states 'This sense of smell is the most prominent sense of the species' - GROUNDED. (5) Context 1 states 'the dog brain is dominated by a large olfactory cortex' - GROUNDED. (6) Context 1 states 'the human brain is dominated by a large visual cortex' - GROUNDED. All claims are directly supported by the retrieved context."
+  },
+  {
+    "question": "What is the DSM-5 diagnosis related to caffeine?",
+    "score": 1.0,
+    "total_claims": 7,
+    "grounded_claims": 7,
+    "claims_matrix": [
+      {
+        "claim_text": "The DSM-5 proposes criteria for 'caffeine-use disorder'",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Caffeine-use disorder refers to dependence on caffeine characterized by failure to control caffeine consumption despite negative physiological consequences",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The DSM-5 does not include caffeine-use disorder as an official diagnosis",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Caffeine-use disorder is classified in the DSM-5 as a 'condition for further study'",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The American Psychiatric Association acknowledged there was sufficient evidence to create a diagnostic model for caffeine-use disorder",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The APA noted that the clinical significance of caffeine-use disorder is unclear",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The unclear clinical significance led to the 'condition for further study' classification",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims: (1) The DSM-5 proposes criteria for 'caffeine-use disorder'; (2) This disorder refers to dependence on caffeine characterized by failure to control consumption despite negative physiological consequences; (3) The DSM-5 does NOT include caffeine-use disorder as an official diagnosis; (4) Instead it is classified as a 'condition for further study'; (5) The APA acknowledged sufficient evidence existed to create a diagnostic model; (6) The APA noted that clinical significance of the disorder is unclear; (7) This unclear clinical significance led to the 'condition for further study' classification. Let me check each against the context: (1) Context 1 explicitly states 'caffeine-use disorder' mirrors 'DSM-5's proposed set of criteria' - grounded; (2) Context 1 directly defines it as 'dependence on caffeine characterized by failure to control caffeine consumption despite negative physiological consequences' - grounded; (3) Context 1 states 'the DSM-5 classifies caffeine-use disorder as a \"condition for further study\"' which directly implies it is NOT an official diagnosis - grounded; (4) The context explicitly states this classification - grounded; (5) Context 1 states 'The APA...acknowledged that there was sufficient evidence in order to create a diagnostic model' - grounded; (6) Context 1 states 'they noted that the clinical significance of the disorder is unclear' - grounded; (7) Context 1 states 'Due to this inconclusive evidence on clinical significance, the DSM-5 classifies caffeine-use disorder as a \"condition for further study\"' - grounded. All claims are supported by the retrieved context."
+  },
+  {
+    "question": "What's the relationship between dogs and wolves?",
+    "score": 0.1111111111111111,
+    "total_claims": 9,
+    "grounded_claims": 1,
+    "claims_matrix": [
+      {
+        "claim_text": "Dogs were domesticated from wolves",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "A study identified 429 genes that differ between modern dogs and modern wolves",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "These genetic differences resulted from initial domestication rather than recent breed formation",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "The differing genes are linked to neural crest and central nervous system development",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Genetic differences affect traits like tameness, smaller jaws, floppy ears, and diminished craniofacial development",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Wolves are known to kill dogs",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Competition would favor wolves over dogs in areas where they coexist",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Wolves typically live in pairs or small packs in areas with high human persecution",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Wolves' pack structure limits interactions between wolves and dogs",
+        "is_grounded": false
+      }
+    ],
+    "internal_rationale": "Let me examine each distinct factual claim made in the answer:\n\n1. 'Dogs were domesticated from wolves' - The context states 'all ancient and modern dogs share a common ancestry and descended from an ancient, extinct wolf population' and 'The dog is a domestic animal that likely travelled a commensal pathway into domestication.' This is supported.\n\n2. 'A study identified 429 genes that differ between modern dogs and modern wolves' - This specific number (429 genes) does NOT appear in the retrieved context. The context does not mention any specific gene count.\n\n3. 'These differences resulted from initial domestication rather than recent breed formation' - The context does not address this distinction or explain the cause of genetic differences.\n\n4. 'These genes are linked to neural crest and central nervous system development' - The context does not mention neural crest, central nervous system development, or any specific functional categories of genes.\n\n5. 'Genes affect traits like tameness, smaller jaws, floppy ears, and diminished craniofacial development' - The context does not mention any of these specific traits (tameness, smaller jaws, floppy ears, diminished craniofacial development).\n\n6. 'These characteristics distinguish domesticated dogs from wolves' - While implied by general knowledge, the context does not explicitly state this.\n\n7. 'Wolves are known to kill dogs' - The context does not explicitly state that wolves kill dogs.\n\n8. 'Competition would favor wolves over dogs in areas where they coexist' - The context does not state this.\n\n9. 'Wolves typically live in pairs or small packs in areas with high human persecution' - The context does not provide information about typical wolf pack sizes or their relationship to human persecution.\n\n10. 'This limits such interactions' (between wolves and dogs) - The context does not make this claim.\n\n11. 'Dogs are domesticated descendants of wolves' - Supported by the context about common ancestry and domestication.\n\n12. 'In situations where they encounter each other, wolves pose a predatory threat to dogs' - The context does not support this claim about predatory threats.\n\nThe answer contains substantial information not found in the retrieved context."
+  },
+  {
+    "question": "How many teeth do dogs have?",
+    "score": 1.0,
+    "total_claims": 1,
+    "grounded_claims": 1,
+    "claims_matrix": [
+      {
+        "claim_text": "Dogs have around 42 teeth in their jaw",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes a single factual claim: that dogs have around 42 teeth in their jaw. Let me verify this against the retrieved context. Context 1 explicitly states: 'The jaw contains around 42 teeth, and it has evolved for the consumption of flesh.' Context 2 also confirms this: 'powerful jaws that house around 42 teeth'. The answer's claim is directly and explicitly supported by both pieces of retrieved context."
+  },
+  {
+    "question": "What does the parasite-mediated domestication hypothesis suggest?",
+    "score": 1.0,
+    "total_claims": 5,
+    "grounded_claims": 5,
+    "claims_matrix": [
+      {
+        "claim_text": "The 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Domestication involves taming, which has an endocrine component",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Parasites can modify endocrine activity and microRNAs",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Genes for resistance to parasites might be linked to those for the domestication syndrome",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Domestic animals are less resistant to parasites than their wild relatives",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims about what the parasite-mediated domestication hypothesis suggests. Let me identify each claim and check against the retrieved context:\n\n1. 'The 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals.' - This is directly stated in Context 1: 'The 2023 parasite-mediated domestication hypothesis suggests that endoparasites such as helminths and protozoa could have mediated the domestication of mammals.' \u2713\n\n2. 'Domestication involves taming, which has an endocrine component' - Context 1 states: 'Domestication involves taming, which has an endocrine component' \u2713\n\n3. 'Parasites can modify endocrine activity and microRNAs' - Context 1 states: 'parasites can modify endocrine activity and microRNAs' \u2713\n\n4. 'Genes for resistance to parasites might be linked to those for the domestication syndrome' - Context 1 states: 'Genes for resistance to parasites might be linked to those for the domestication syndrome' \u2713\n\n5. 'Domestic animals are less resistant to parasites than their wild relatives' - Context 1 states: 'it is predicted that domestic animals are less resistant to parasites than their wild relatives' \u2713\n\nAll claims in the answer are directly supported by the retrieved context."
+  },
+  {
+    "question": "What's the difference between the 2023 and 2026 remote work policies?",
+    "score": 1.0,
+    "total_claims": 6,
+    "grounded_claims": 6,
+    "claims_matrix": [
+      {
+        "claim_text": "2023 policy permitted up to 2 days per week of remote work",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "2026 policy permits up to 4 days per week of remote work",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "2023 policy required 3 days advance notice for remote work requests",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "2026 policy requires 24 hours advance notice for remote work requests",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "2023 policy required remote work to be within the same state as the employee's registered office location",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "2026 policy allows remote work from any state, provided employees notify HR of their location for tax purposes",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims about the 2023 and 2026 remote work policies by comparing them across three dimensions:\n\n1. Days per week: Claims 2023 allows up to 2 days; 2026 allows up to 4 days.\n   - Context 1 explicitly states: 'Employees are permitted to work remotely up to 2 days per week' (2023)\n   - Context 2 explicitly states: 'employees may work remotely up to 4 days per week' (2026)\n   - Both are directly supported.\n\n2. Advance notice required: Claims 2023 requires 3 days; 2026 requires 24 hours.\n   - Context 1 explicitly states: 'Remote work requests must be submitted to a direct manager at least 3 days in advance' (2023)\n   - Context 2 explicitly states: 'Remote work requests now only require 24 hours advance notice' (2026)\n   - Both are directly supported.\n\n3. Geographic restrictions: Claims 2023 requires same state as registered office; 2026 allows any state with HR notification.\n   - Context 1 explicitly states: 'All remote work must be performed within the same state as the employee's registered office location' (2023)\n   - Context 2 explicitly states: 'Employees may work remotely from any state, provided they notify HR of their location for tax purposes' (2026)\n   - Both are directly supported.\n\n4. Summary statement about the changes: Claims the 2026 update doubled allowed days, reduced notice period, and removed state restrictions while adding tax notification.\n   - This is a characterization of the differences already stated in the table, supported by the specific facts listed above."
+  },
+  {
+    "question": "What is espresso?",
+    "score": 0.125,
+    "total_claims": 8,
+    "grounded_claims": 1,
+    "claims_matrix": [
+      {
+        "claim_text": "Espresso is a concentrated coffee drink",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Espresso can be served alone as a shot or short black",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "A typical 30 milliliters serving of espresso contains approximately 65 milligrams of caffeine",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Espresso contains three distinct phases: an emulsion of oil droplets, suspended solids, and a layer of gas bubbles or foam",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "The dispersed oil droplets are perceived as creamy and contribute to the drink's body",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Espresso can be served with hot water added (called caff\u00e8 americano)",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Milk can be added to espresso in various forms, such as steamed milk to make a caff\u00e8 latte",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "Espresso is used as the base for various other coffee drinks",
+        "is_grounded": false
+      }
+    ],
+    "internal_rationale": "The answer makes several factual claims about espresso. Let me check each against the retrieved context:\n\n1. 'Espresso is a concentrated coffee drink' - GROUNDED. Context 1 explicitly states it is 'a concentrated form of coffee'\n\n2. 'Served alone as a shot or short black' - NOT GROUNDED. The retrieved context does not mention these serving descriptions.\n\n3. 'A typical 30ml serving contains approximately 65mg of caffeine' - NOT GROUNDED. The retrieved context mentions typical serving size is 25-30ml and mentions crema, but contains no information about caffeine content.\n\n4. 'Contains three distinct phases: emulsion of oil droplets, suspended solids, and gas bubbles/foam' - PARTIALLY GROUNDED. Context 2 mentions espresso 'has a more complex physical and chemical constitution' and mentions 'crema that floats on the surface' (the foam). Context 1 mentions 'higher concentration of suspended and dissolved solids.' However, the specific breakdown into three distinct phases with oil droplets is not explicitly stated in the retrieved context.\n\n5. 'Oil droplets are perceived as creamy and contribute to body' - NOT GROUNDED. While the context mentions the drink has a 'distinctive' character and 'complex flavor profile,' it does not discuss oil droplets or their perception as creamy.\n\n6. 'Can be served with hot water added (caff\u00e8 americano)' - NOT GROUNDED. The retrieved context does not mention americano or adding hot water.\n\n7. 'Milk can be added to make caff\u00e8 latte' - NOT GROUNDED. The retrieved context does not mention adding milk or latte preparations.\n\n8. 'Used as base for various other coffee drinks' - WEAKLY GROUNDED. While not explicitly stated as a general principle, the context's mention of variations and the nature of espresso as a concentrated base is implicit but not directly stated."
+  },
+  {
+    "question": "Why were dogs originally domesticated, according to the commensal pathway theory?",
+    "score": 1.0,
+    "total_claims": 5,
+    "grounded_claims": 5,
+    "claims_matrix": [
+      {
+        "claim_text": "Dogs were not intentionally domesticated according to the commensal pathway theory",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "In the commensal pathway, humans initially neither benefitted nor were harmed by wild dogs eating refuse from their camps",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Dogs were originally attracted to human settlements to scavenge food scraps",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Through intensified relationship and proximity to humans, dogs gradually became domesticated over time",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Humans became entangled with dogs as the relationship between them intensified",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "Let me break down the distinct factual claims in the answer:\n\n1. 'Dogs were not intentionally domesticated' - The context states 'Humans did not intend to domesticate mammals from either the commensal or prey pathways,' which directly supports this claim.\n\n2. 'The domestication occurred through a commensal relationship where humans initially neither benefitted nor were harmed by wild dogs eating refuse from their camps' - The context explicitly states this exact phrase: 'humans initially neither benefitted nor were harmed by wild dogs eating refuse from their camps.' This is directly grounded.\n\n3. 'Dogs were originally attracted to human settlements to scavenge food scraps' - The context says 'wild dogs eating refuse from their camps' which directly implies they were scavenging food. This is grounded.\n\n4. 'Through this relationship of proximity and dependence on human refuse, they gradually became domesticated over time' - The context states 'humans became entangled with these species as the relationship between them intensified, and humans' role in their survival and reproduction gradually led to formalized animal' [domestication]. This supports the claim about gradual domestication through intensified relationship, though 'dependence on human refuse' is somewhat inferred from context rather than explicitly stated. The core claim is grounded.\n\n5. 'Dogs domesticated themselves, so to speak, by exploiting an available food source near human camps' - This is a reasonable interpretation supported by the context's description of commensal pathway and lack of human intent.\n\n6. 'Rather than being deliberately domesticated for any particular purpose' - The context supports this by stating humans didn't intend to domesticate them, so this is grounded.\n\nAll major claims appear to be well-supported by the retrieved context."
+  },
+  {
+    "question": "What's the product code for the coffee maker, and how many units were made?",
+    "score": 1.0,
+    "total_claims": 2,
+    "grounded_claims": 2,
+    "claims_matrix": [
+      {
+        "claim_text": "The product code for the coffee maker is XJ-4471",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "200 units were made in the limited batch release",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes two distinct factual claims: (1) the product code is XJ-4471, and (2) 200 units were made. Let me check each against the retrieved context.\n\nClaim 1: Product code is XJ-4471. Context 1 explicitly states: 'The company's internal product code for the new coffee maker is XJ-4471.' This is directly supported.\n\nClaim 2: 200 units were made. Context 1 explicitly states: 'This model was released in a limited batch of only 200 units.' This is directly supported.\n\nBoth claims are explicitly stated in Context 1. Context 2 is about historical coffee maker inventions and is not relevant to either claim."
+  },
+  {
+    "question": "Do cats have a social survival strategy like herd behavior?",
+    "score": 1.0,
+    "total_claims": 1,
+    "grounded_claims": 1,
+    "claims_matrix": [
+      {
+        "claim_text": "Cats do not have a social survival strategy or herd behavior",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes a single factual claim: that cats do not have a social survival strategy or herd behavior. The retrieved context explicitly states this multiple times: 'do not have a social survival strategy or herd behavior, they always hunt alone' (Context 1) and 'Because cats do not have a social survival strategy or herd behavior, they always hunt alone' (Context 2). This claim is directly supported by the retrieved context."
+  },
+  {
+    "question": "What happened during the French officer's coffee voyage in 1723?",
+    "score": 1.0,
+    "total_claims": 6,
+    "grounded_claims": 6,
+    "claims_matrix": [
+      {
+        "claim_text": "The French officer's coffee voyage occurred in 1723",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "A storm occurred during the journey",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "A suspected saboteur was involved during the voyage",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "A severe drought at sea affected the voyage",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The plant survived the journey",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "The plant became the ancestor of millions of coffee trees grown throughout Central and South America",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims about the 1723 French officer's coffee voyage:\n\n1. The voyage occurred in 1723 - the context explicitly states 'The specific year the French officer completed this journey was 1723'\n2. A storm occurred during the journey - the context states 'the plant survived a difficult voyage that included a storm'\n3. A suspected saboteur was involved - the context states the voyage included 'a suspected saboteur'\n4. A severe drought at sea affected the voyage - the context states the voyage included 'a severe drought at sea'\n5. The plant survived the journey - the context states 'the plant survived a difficult voyage'\n6. The journey was across the Atlantic Ocean - context 2 states the officer 'transported a single coffee plant across the Atlantic Ocean'\n7. The plant became the ancestor of millions of coffee trees in Central and South America - context explicitly states this\n\nAll of these claims are directly supported by the retrieved context."
+  },
+  {
+    "question": "What percentage of caffeine users develop tolerance to its sleep effects?",
+    "score": 1.0,
+    "total_claims": 0,
+    "grounded_claims": 0,
+    "claims_matrix": [],
+    "internal_rationale": "The answer makes one core claim: that the retrieved context does not provide a specific percentage of caffeine users who develop tolerance to sleep-disrupting effects. Let me verify this against the context. The retrieved context does discuss caffeine tolerance and sleep effects, stating 'Some coffee drinkers develop tolerance to its undesired sleep-disrupting effects, but others apparently do not.' However, the context uses only qualitative language ('Some', 'others') and does not provide any numerical percentage or quantitative data about what proportion of users develop this tolerance. The answer's claim that 'no quantitative data or percentage is given' is accurate and well-supported by the context. The answer is a correct refusal - it accurately states that the specific information requested (a percentage) is not present in the retrieved context. Since this is a correct refusal that accurately reflects what the context does and does not contain, the answer makes no factual claims about the world that need to be fact-checked."
+  },
+  {
+    "question": "What is domestication syndrome?",
+    "score": 0.5,
+    "total_claims": 4,
+    "grounded_claims": 2,
+    "claims_matrix": [
+      {
+        "claim_text": "Domestication syndrome is the suite of phenotypic traits that arose during the initial domestication process and which distinguish domesticated species including crops from their wild ancestors",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Domestication syndrome can also refer to a set of differences now observed in domesticated organisms compared to their wild counterparts",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "In animals, domestication syndrome affects genes for behavior, making them less aggressive",
+        "is_grounded": false
+      },
+      {
+        "claim_text": "In plants, domestication syndrome affects genes for morphology, such as increasing seed size and stopping the shattering of cereal seedheads",
+        "is_grounded": false
+      }
+    ],
+    "internal_rationale": "Let me identify the distinct factual claims in the answer:\n\n1. 'Domestication syndrome is the suite of phenotypic traits that arose during the initial domestication process and which distinguish domesticated species including crops from their wild ancestors.' - This is directly quoted from Context 1, so it's grounded.\n\n2. 'It can also refer to a set of differences now observed in domesticated organisms compared to their wild counterparts.' - Context 1 states 'It can also mean a set of differences now observed in' but the context is cut off. Context 2 continues this idea, discussing differences in wild populations and domesticated populations, so this is grounded.\n\n3. 'In animals: genes for behavior, making them less aggressive' - Context 2 explicitly states 'Domesticated mammals in particular tend to be smaller and less aggressive than their wild counterparts,' so the less aggressive trait is grounded. However, the answer specifically attributes this to 'genes for behavior,' which is an interpretation not explicitly stated in the context.\n\n4. 'In plants: genes for morphology, such as increasing seed size and stopping the shattering of cereal seedheads' - The context does NOT mention anything about seed size or shattering of cereal seedheads. This is completely absent from the provided context. This claim is NOT grounded.\n\nLet me be more precise about claim 3: The context says mammals are 'less aggressive' but doesn't specifically say this is due to 'genes for behavior' - it just states the phenotypic trait exists. The framing as 'genes for behavior' is an inference not directly supported.\n\nClaim 4 is clearly not supported - the examples about seed size and cereal seedhead shattering are not mentioned anywhere in the retrieved context."
+  },
+  {
+    "question": "Can dogs communicate with humans?",
+    "score": 1.0,
+    "total_claims": 4,
+    "grounded_claims": 4,
+    "claims_matrix": [
+      {
+        "claim_text": "Dogs can communicate with humans",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Humans communicate with dogs by using vocalization, hand signals, and body posture",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Dogs use eye gaze, facial expression, vocalization, body posture, and gustatory communication as communication behaviors",
+        "is_grounded": true
+      },
+      {
+        "claim_text": "Dogs respond to both vocal and nonvocal voices",
+        "is_grounded": true
+      }
+    ],
+    "internal_rationale": "The answer makes several distinct factual claims about dog-human communication. Let me examine each:\n\n1. 'Dogs can communicate with humans' - The context explicitly states 'Dog communication is the transfer of information between dogs, as well as between dogs and humans.' This directly supports the claim.\n\n2. 'Humans communicate with dogs by using vocalization, hand signals, and body posture' - The context explicitly states this exact phrase. Direct support.\n\n3. 'Dog communication is defined as the transfer of information between dogs and humans' - The context provides this definition directly. Direct support.\n\n4. 'Dogs use eye gaze, facial expression, vocalization, body posture, and gustatory communication' - The context explicitly lists these as \"Communication behaviors of dogs.\" Direct support.\n\n5. 'Dogs respond to both vocal and nonvocal voices using the brain's region' - The context states 'dogs respond to both vocal and nonvocal voices using the brain's region towards' (the sentence appears incomplete, but the claim about dogs responding to vocal and nonvocal voices is explicitly stated). Direct support.\n\nAll claims made in the answer are directly supported by explicit statements in the retrieved context."
+  }
+]
