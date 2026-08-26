@@ -418,6 +418,42 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 
 **Honest, complete conclusion: a lower kappa does not necessarily mean a worse judge, and this project's evidence supports taking that possibility seriously rather than assuming higher-agreement-with-human is automatically better.** Finding 16 and 17 already established that the human baseline itself is not a perfect ground truth - it has demonstrably missed real fabrications on a holistic read (both the "429 genes" case and, now, the domestication-syndrome seed-size detail). `claim_audit_judge`'s finer-grained decomposition may be surfacing more of exactly the kind of error human and holistic-LLM grading are structurally prone to missing - at the direct cost of agreeing less with that same human baseline, since disagreeing with an imperfect reference is not the same as being wrong. This is stated as a genuine, currently unresolved open question, not a conclusion this project's evidence can fully settle: distinguishing "this judge is stricter and therefore more correct" from "this judge is stricter and therefore pedantic about claims that don't matter to the answer's real correctness" would require an independent, disinterested audit of every disagreement case, not the same investigator confirming their own design's verdicts felt right. The disciplined answer here is to report the lower kappa plainly, present the concrete hallucination-catching evidence found along the way, and name the limitation of this comparison rather than resolve it by assertion.
 
+## Finding 19: Stale OS Environment Variable Silently Shadowed .env API Key
+
+**Real problem:** All OpenRouter calls in `generate_split_brain_data.py` returned `401 Unauthorized` despite a real, correctly-formatted key present in `.env`.
+
+**Real investigation:** Built a diagnostic that fingerprinted (length + first 6 / last 4 chars only, never the full secret) both the OS-level environment variable and the `.env` file value separately. Found the OS environment variable held a literal placeholder string, `YOUR_API_KEY_HERE` (31 chars) -- left over from following some setup guide's example verbatim into a system environment variable at some point -- while `.env` correctly held the real 73-char key. `python-dotenv`'s `load_dotenv()` does not override an already-set OS environment variable by default, so the stale placeholder silently won every single call.
+
+**Real result:** Cleared the stale value at User scope via `[System.Environment]::SetEnvironmentVariable(...,"User")` (Machine scope was already clean, confirmed via `GetEnvironmentVariable`, and would have needed an elevated shell anyway). Additionally hardened the script itself with `load_dotenv(override=True)` so `.env` always wins over the OS environment going forward, regardless of what stale variables might exist later -- defense in depth beyond fixing this one instance.
+
+**Honest conclusion:** The first "fix" attempt appeared to fail identically -- because `SetEnvironmentVariable` writes to the registry but does not affect an already-running shell's inherited environment block. The registry can be correct while the active terminal is still wrong. Had to recognize that pattern (new shell required, not just a new command) before the real fix took effect.
+
+---
+
+## Finding 20: Pydantic-core (Rust) Does Not Support Regex Look-Ahead
+
+**Real problem:** `EvaluationSchema.clerk_model` used `Field(pattern=r"^(?!.*llama-3\.1-8b-instruct).*$")` to structurally hard-block the fine-tuning target from ever being wired in as the clerk model -- directly per the Tier 3 curriculum's Section 1 split-brain rule and its own example code.
+
+**Real investigation:** `SchemaError: regex parse error ... error: look-around, including look-ahead and look-behind, is not supported`, raised at class-definition time (import time), before any pipeline code even ran. `pydantic-core` uses Rust's `regex` crate for field pattern validation, which deliberately excludes look-around constructs (a documented, permanent design choice for the crate, not a bug that will be fixed).
+
+**Real result:** Replaced the regex constraint with an equivalent `@field_validator` that does the same check in plain Python (`if FINE_TUNE_TARGET in v.lower(): raise ValueError(...)`). Verified by actually importing the module and instantiating `EvaluationSchema` with a blocked model string to confirm `ValidationError` still fires correctly -- `ast.parse`-only syntax checking would NOT have caught this, since it's a runtime schema-construction error, not a syntax error, and one recurrence of this exact gap happened mid-session before the import-and-exercise verification step was added.
+
+**Honest conclusion:** The curriculum spec's own Section 3b example code carries this same bug -- anyone copying it verbatim into a current pydantic v2 project hits this immediately at import time. Worth flagging if this curriculum spec is reused or shared elsewhere.
+
+---
+
+## Finding 21: DeepSeek V4 Pro's Hidden Reasoning Tokens Inflated Generation Cost ~4x, With Provider-Level Parameter Inconsistency
+
+**Real problem:** A 5-chunk cost diagnostic showed wildly inconsistent completion-token counts across otherwise-identical runs at `temperature=0` (e.g. chunk 1: 102 output tokens on one run, 499 on the next), and the projected full-796-chunk generation cost drifted between $0.92 and $1.26 across two runs on the same 5 chunk IDs.
+
+**Real investigation:** Added `completion_tokens_details.reasoning_tokens` logging directly from OpenRouter's own usage accounting (not inferred). Found reasoning-token usage ranging 0-1606 per chunk, frequently 70-90% of total completion tokens, on a task (mechanical JSON-formatted instruction/output generation) with no real need for multi-step reasoning. Tested OpenRouter's unified `reasoning` parameter across 4 configurations (`none`, `low`, `max_tokens=0`, and no parameter/baseline) against both a trivial test prompt and real chunk content, with provider identity logged per call. `effort=none` reliably drove reasoning to exactly 0 across every test -- 1 config sweep plus 3 repeated real-chunk calls served by 3 different underlying providers (Novita, GMICloud, Venice, Together). By contrast, `effort=low` and `max_tokens=0` paradoxically *increased* reasoning above baseline (745 -> 971 -> 1605 reasoning tokens) on identical content served by the identical provider (Novita) -- the opposite of their documented effect.
+
+**Real result:** Wiring `reasoning: {"effort": "none"}` into the generator call dropped projected 796-chunk generation cost from $1.26 to $0.31 -- a ~75% reduction -- with faithfulness holding at 1.000 across all 5 chunks, unchanged from the reasoning-enabled baseline.
+
+**Honest conclusion:** `effort=none` is verified safe and effective for this pipeline's generation stage. `effort=low` and `max_tokens=0` are NOT safe to use with `deepseek/deepseek-v4-pro` via OpenRouter as of this testing -- both produced results opposite their documented semantics, on the same provider, same content. A smaller, separate non-determinism also remained even with reasoning fully disabled: completion token counts still varied (84 / 121 / 263) across 3 identical-`temperature=0` real-chunk calls. Root cause not yet investigated -- flagged as an open question for a future module rather than assumed resolved.
+
+---
+
 ## What this project demonstrates
 
 
@@ -440,6 +476,9 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 - Cross-validating a new evaluation framework against an established human baseline using the exact same statistical method as the original study, then investigating every disagreement by hand against real source text rather than trusting the summary statistic — discovering that the framework was actually more correct than the human baseline in cases where they disagreed, a finding the chosen statistic (Cohen's kappa) could not surface on its own, and disclosing the small sample size honestly rather than overstating a five-case pattern as proven
 - Investigating a suspicious coincidence (an identical statistic to a known-bad prior result) instead of accepting or dismissing it, finding a real threshold-boundary bug in the comparison methodology itself, fixing it, and then reporting the corrected result as genuinely comparable to — not clearly better or worse than — a more complex alternative, resisting the pull to frame a cheaper design as an unambiguous win once the evidence turned out mixed
 - Recognizing that a lower agreement score against an established baseline does not automatically mean a worse result, when that baseline has already been shown to have its own real blind spots — and naming the resulting question as genuinely open and unresolved by this project's evidence, rather than resolving it in favor of whichever conclusion is more flattering to the newest design
+- Distinguishing a stale OS-level configuration value from a code bug by fingerprinting both sources separately rather than assuming the newest change is at fault, then hardening the fix so the same class of shadowing failure can't silently recur later
+- Catching a runtime schema-construction error that pure syntax checking (`ast.parse`) cannot see, by actually importing and exercising the module rather than trusting a clean parse as sufficient verification
+- Measuring, rather than assuming, that a third-party API parameter's real behavior matches its documented semantics — finding two of four tested configurations produced the opposite of their stated effect on the same provider and content, and only trusting the one setting verified consistent across repeated runs and real (not synthetic) input
 
 ---
 
