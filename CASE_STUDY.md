@@ -454,6 +454,18 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 
 ---
 
+## Finding 22: The Split-Brain Clerk Empirically Catches Real Fabrications, Verified at Full 796-Chunk Scale
+
+**Real problem:** The 5-chunk diagnostic runs used to establish a cost baseline all scored exactly 1.000 faithfulness with zero FALSE claims across every sample tested. That result was too clean to trust on n=5 -- a judge that never fails anything is indistinguishable from a rubber stamp, and the curriculum's own Section 2 warns explicitly against assuming a validator works just because it hasn't yet been seen to fail.
+
+**Real investigation:** Ran the full 796-chunk corpus through the split-brain pipeline (`deepseek/deepseek-v4-pro` generator with `reasoning: effort=none`, `openai/gpt-4o-mini` clerk) and analyzed the complete faithfulness distribution rather than a handful of examples. 792/796 chunks completed; 4 did not (2 generation refusals, 1 a genuine new bug -- see below -- and 1 a transient `ConnectionResetError` with no retry in this synchronous diagnostic script). Of the 792 scored: 742 (93.7%) still landed at exactly 1.000, but 50 (6.3%) had at least one FALSE claim, and 36 (4.5%) fell below the curriculum's 0.85 accept threshold. Manually inspected several of the sub-1.0 cases against their actual generated content rather than trusting the aggregate number: one chunk's generated answer explicitly stated "the text is cut off, but it implies a third origin story" for a truncated source chunk -- a clear generator confabulation, correctly flagged FALSE by the clerk. Another chunk's generated answer listed "Rapa Iti in French Polynesia" among islands absent from the actual source list; the clerk marked that specific claim FALSE even though it appears verbatim in the candidate's own generated `output` text, confirming the clerk verifies against the source chunk rather than merely echoing the generator's confidence.
+
+**Real result:** The split-brain architecture is empirically not a rubber stamp -- it demonstrably catches real, distinct fabrication patterns (confabulating around truncated input, inventing plausible-sounding but unsupported specifics) at a measurable, non-trivial rate (6.3% of a 796-chunk real corpus) rather than passing everything through uniformly. Separately, one of the 4 unscored chunks surfaced a real, previously-latent bug: `'NoneType' object has no attribute 'strip'`, from assuming OpenRouter's `message.content` field is always a string. It is not always -- certain finish-reason or content-filter cases return `null`. Fixed with an explicit `None` check in both the generator and clerk code paths (the same assumption existed in both places), verified by reproducing the exact failure with a simulated null-content response rather than just re-running and hoping it didn't recur.
+
+**Honest conclusion:** The 5-chunk sample's perfect score was a real artifact of small sample size on easy content, not evidence the clerk doesn't work -- scaling to the full corpus was necessary to actually characterize its behavior, and the two manually-inspected sub-1.0 cases both hold up as correct catches on direct inspection, not just correct according to the clerk's own verdict. Not every sub-1.0 case was manually verified, though (only a few of the 50 were inspected by hand) -- it remains possible some flagged claims are clerk over-corrections rather than real generator errors, an open question for a future, more systematic manual audit rather than one this diagnostic run resolves on its own. The transient connection-reset failure with no retry is a known, accepted limitation of this synchronous diagnostic script specifically, not of the eventual Celery-based Module 1 architecture, which is designed with retry and dead-letter handling from the start.
+
+---
+
 ## What this project demonstrates
 
 
@@ -479,6 +491,7 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 - Distinguishing a stale OS-level configuration value from a code bug by fingerprinting both sources separately rather than assuming the newest change is at fault, then hardening the fix so the same class of shadowing failure can't silently recur later
 - Catching a runtime schema-construction error that pure syntax checking (`ast.parse`) cannot see, by actually importing and exercising the module rather than trusting a clean parse as sufficient verification
 - Measuring, rather than assuming, that a third-party API parameter's real behavior matches its documented semantics — finding two of four tested configurations produced the opposite of their stated effect on the same provider and content, and only trusting the one setting verified consistent across repeated runs and real (not synthetic) input
+- Distrusting a suspiciously clean result on a small sample rather than accepting it, then confirming at full corpus scale that a validation mechanism catches real, distinct fabrication patterns rather than passing everything through uniformly — including one case where the validator correctly rejected a claim that appeared verbatim in the very output it was checking, evidence it verifies against the source rather than the generator's own confidence
 
 ---
 
