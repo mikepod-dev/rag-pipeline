@@ -466,6 +466,18 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 
 ---
 
+## Finding 23: Real Tokenizer Audit Closes Module 1 -- Zero Truncation Needed, Final Split Cross-Verified Against Independent Analysis
+
+**Real problem:** The curriculum's Section 3a requires auditing every generated record against the actual fine-tuning target's tokenizer (`meta-llama/Llama-3.1-8B-Instruct`) rather than a word-count approximation, and requires the math gate's actual output contract -- `accepted_dataset.jsonl` / `quarantine_dataset.jsonl` -- rather than one undifferentiated file with a status field. Neither existed yet after the 796-chunk generation run.
+
+**Real investigation:** `meta-llama/Llama-3.1-8B-Instruct` is a gated Hugging Face model requiring manual license approval, not just an account -- the first run failed with a real `403` while access was pending review, confirming this is a genuine external dependency rather than a configuration mistake. Access was granted shortly after. Built `finalize_module1_dataset.py` to audit all 792 previously-scored records against the real tokenizer (`instruction + input + output`, `add_special_tokens=True`, matching the curriculum's own `audit_record()` reference implementation) and split into accepted/quarantined based on both the token-length threshold and the existing 0.85 faithfulness gate. Verified the script's branch logic beforehand against a stub tokenizer covering all four paths (clean accept, low-faithfulness quarantine, over-length discard, upstream pipeline failure) before running it against the real gated model.
+
+**Real result:** 756 accepted, 40 quarantined (36 for faithfulness below 0.85, 4 for upstream pipeline failure -- the same 4 non-`SCORED` records from Finding 22 -- 0 for token length). Token distribution: p50=90, p90=136, p99=177, max=221, against a 512-token threshold. The 36-record faithfulness-quarantine count matches, exactly, the independent count from Finding 22's separate distribution analysis -- real cross-verification between two different scripts computing the same underlying number from different code paths, not a single unverified figure.
+
+**Honest conclusion:** Zero records were discarded for exceeding the token limit. That is a legitimate, disclosed limitation of what this specific run proves: the truncation/discard decision logic was built and unit-verified against a stub, but never exercised end-to-end against a real over-length record, because this corpus's generated answers -- capped at 221 tokens -- never approached the 512 threshold. The design decision to DISCARD rather than truncate over-length records (documented in the script rather than applied silently) remains untested against real data as a result, and should be revisited if a future corpus or module produces longer generated outputs. This closes the data-preparation portion of Module 1 (rewritten) as scoped for this curriculum -- the distributed FastAPI/Redis/Celery architecture from Section 4 is deliberately deferred to a future tier, not part of this module's completion.
+
+---
+
 ## What this project demonstrates
 
 
@@ -492,6 +504,7 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 - Catching a runtime schema-construction error that pure syntax checking (`ast.parse`) cannot see, by actually importing and exercising the module rather than trusting a clean parse as sufficient verification
 - Measuring, rather than assuming, that a third-party API parameter's real behavior matches its documented semantics — finding two of four tested configurations produced the opposite of their stated effect on the same provider and content, and only trusting the one setting verified consistent across repeated runs and real (not synthetic) input
 - Distrusting a suspiciously clean result on a small sample rather than accepting it, then confirming at full corpus scale that a validation mechanism catches real, distinct fabrication patterns rather than passing everything through uniformly — including one case where the validator correctly rejected a claim that appeared verbatim in the very output it was checking, evidence it verifies against the source rather than the generator's own confidence
+- Cross-verifying a computed result against an independent, separately-written analysis rather than trusting a single code path, and disclosing precisely which part of a design (a truncation/discard rule) was built and unit-tested but never actually exercised against real data, rather than presenting untested logic as proven
 
 ---
 
