@@ -255,7 +255,16 @@ def generate_candidate(chunk_text: str, chunk_id: str) -> tuple[dict | None, dic
     usage = response.get("usage", {})
     cost = compute_cost(GENERATOR_MODEL, usage)
 
-    raw = response["choices"][0]["message"]["content"].strip()
+    raw_content = response["choices"][0]["message"]["content"]
+    if raw_content is None:
+        # OpenRouter can return null content (e.g. certain content-filter or
+        # finish_reason cases) instead of an empty string -- treat identically
+        # to a refusal rather than crashing on .strip().
+        print(
+            f"  [GEN] chunk {chunk_id}: API returned null content -- treating as refusal/failure."
+        )
+        return None, usage, cost
+    raw = raw_content.strip()
     try:
         candidate = json.loads(raw)
     except json.JSONDecodeError:
@@ -325,7 +334,16 @@ def clerk_audit(
         usage_total["completion_tokens"] += usage.get("completion_tokens", 0)
         cost_total += compute_cost(CLERK_MODEL, usage)
 
-        raw = response["choices"][0]["message"]["content"].strip()
+        raw_content = response["choices"][0]["message"]["content"]
+        if raw_content is None:
+            # Same null-content edge case as the generator -- treat as a schema-validation
+            # failure so it goes through the existing retry path instead of crashing.
+            last_error = "API returned null content for clerk response"
+            print(
+                f"  [CLERK] chunk {chunk_id}: attempt {attempt + 1}/{MAX_CLERK_RETRIES} got null content."
+            )
+            continue
+        raw = raw_content.strip()
         try:
             evaluation = EvaluationSchema.model_validate_json(raw)
             return evaluation, usage_total, cost_total, None
