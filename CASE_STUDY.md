@@ -492,6 +492,42 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 25: Teacher-Forced Eval Loss Does Not Guarantee Real Generation Quality -- checkpoint-77's Best-Loss Checkpoint Produced a Complete Topic Hallucination
+
+**Real problem:** Finding 24 identified checkpoint-77 (epoch 7, run1) as the eval-loss minimum and the natural choice for a baseline adapter. Before trusting that label, checkpoint-77 was loaded fresh and tested with actual free-running generation against real training examples, rather than assuming a good loss number implies good output.
+
+**Real investigation:** A single spot-check (record 5) produced an answer thematically related to the real target but with fabricated specifics (invented "legal heir/beneficiary" status for pets instead of the real "guardian" reclassification). Suspecting sampling noise, four more records were tested at temperature=0 with greedy decoding for reproducibility. Two held up reasonably; two did not -- record 18 generated an entirely different question instead of answering the one asked, and record 50 produced a complete, unrelated topic hallucination: the real target concerned wolves' legal protection under EU wildlife law, and the model generated a fact about the 1884 patent date of the first espresso machine. A broader automated check across 30 records using a crude keyword-domain classifier found 4/30 (13.3%) topic mismatches -- but manually re-reading the four flagged cases revealed the classifier itself was unreliable (missing real defects in on-topic-but-wrong-detail answers, like record 15 dropping the source's specific measurements) and, separately, that greedy decoding was not perfectly reproducible run-to-run on this GPU (record 10 generated materially different text on two identical calls), a real, documented consequence of non-associative floating-point reduction in CUDA kernels.
+
+**Real result:** Of seven manually inspected generations, only one held up as fully faithful to its real training target. The checkpoint with the best *teacher-forced* eval loss in the entire run1 curve produced unreliable, sometimes completely hallucinated, free-running generations -- including on a training example it was directly trained on for multiple epochs.
+
+**Honest conclusion:** Teacher-forced loss (the standard training/eval metric, where the model predicts each next token given the *correct* preceding tokens) and real autoregressive generation quality (where the model's own possibly-wrong outputs feed forward into further generation) are measuring genuinely different things. A checkpoint can look best by the metric the curriculum's own loss-divergence exercise relies on and still be a poor choice in practice. This is a real limitation of loss-curve-only model selection, not something this project's instrumentation had previously surfaced -- it took directly generating and reading real output to catch.
+
+---
+
+## Finding 26: Prompt-Token Loss Dilution -- Masking the Loss to Completion-Only Tokens Shifted Overfitting Onset from Epoch 7 to Epoch 2
+
+**Real problem:** Investigating Finding 25's root cause: the run1 training data was built as a single flat `text` field containing the full rendered chat template (system + user + assistant turns), passed to `SFTTrainer` via `dataset_text_field="text"`. In that configuration, TRL computes loss across the entire sequence by default, including the user's instruction tokens -- meaning the model was partially trained to predict *the questions*, diluting the actual answer-generation training signal. This is consistent with every failure mode observed in Finding 25: record 18 generating a new question instead of an answer is the clearest signature of a model that never learned a firm question/answer boundary.
+
+**Real investigation:** Restructured the dataset into separate `prompt`/`completion` fields (prompt ending exactly at the assistant generation cue, completion containing only the real answer plus an EOS token), which lets `SFTTrainer` automatically mask prompt tokens out of the loss calculation. Retrained from a genuinely fresh base model (not continuing from the compromised checkpoint-77) with identical hyperparameters (r=16, batch 64, lr=2e-4) as an isolated single-variable test.
+
+**Real result:** Eval loss minimum shifted from epoch 7 (run1) to epoch 2 (run2), with markedly sharper divergence afterward (epoch 8 eval loss 34% above the minimum, vs. 13% in run1). The raw loss values between the two runs are not directly comparable -- run1's loss was diluted by easy, low-loss prompt tokens, so its lower absolute numbers do not mean it was a better run. What matters is the curve shape: masking correctly concentrated the gradient signal onto the harder, more informative completion tokens, which made the same hyperparameters overfit this small (680-example) dataset much faster than before.
+
+**Honest conclusion:** The masking fix was conceptually correct and is very likely necessary regardless of what final hyperparameters are chosen -- but fixing it exposed that rank, epoch count, and learning rate had implicitly been tuned (via the curriculum's own suggested epoch count) for the wrong, diluted training signal. The two-epoch minimum observed here has weak statistical support (epoch 1 eval loss 1.813 vs. epoch 2's 1.776 -- a small gap that could plausibly be noise on a 76-example eval set) and should not be treated as a precisely-located optimum -- see Finding 27 for why finer resolution wasn't obtained.
+
+---
+
+## Finding 27: Three Repeated, Undiagnosable Colab Crashes Forced an Honest Resolution Limitation on the Real Overfitting Minimum
+
+**Real problem:** Finding 26 left the true eval-loss minimum weakly resolved (epoch 1 vs. epoch 2, an 11-step gap between eval points). Attempted a finer-grained run (`eval_steps=2` instead of once per 11-step epoch) from a fresh base model to actually locate the minimum with statistical confidence rather than guessing between two close, possibly-noisy values.
+
+**Real investigation:** The finer-grained run crashed with "Your session crashed for an unknown reason" before completing a single epoch -- the third distinct crash of this session (following the earlier full-disconnect covered in Finding 24, and a host-RAM exhaustion crash during a separate checkpoint-loading sanity check). Investigated via Colab's app.log panel rather than assuming the cause; found only a bare "kernel restarted" / "AsyncIOLoopKernelRestarter" entry with no underlying OOM or resource-limit message, and confirmed directly that no memory-related log entries exist anywhere in the log at all. This is a genuine ceiling of Colab's free-tier diagnostics -- the panel surfaces Jupyter server lifecycle events, not the underlying container's resource-kill reasoning, so the true root cause (most likely: eval + Drive-checkpoint-write frequency of once every 2 steps overloading host resources or triggering a rate limit, though this remains a hypothesis, not a confirmed cause) could not be directly confirmed.
+
+**Real result:** After three crashes attempting to pin down single-step precision, the decision was made to stop and accept the resolution already available from Finding 26 -- checkpoint-22 (run2's epoch-2 minimum, eval loss 1.776) as the working baseline, rather than a fourth attempt at finer granularity.
+
+**Honest conclusion:** This is a disclosed limitation, not a resolved question. The exact optimal step within the epoch 1-2 range is not known to single-step precision, and the tooling available in this environment could not establish it without further, potentially repeated infrastructure failures. Given the curve's clear overall shape (sharp divergence starting almost immediately after masking, per Finding 26), the practical difference between checkpoint-11 and checkpoint-22 is very likely small relative to the larger finding -- but this project's own standard is to report what wasn't resolved rather than presenting an estimate as more precise than the evidence supports.
+
+---
+
 ## What this project demonstrates
 
 
