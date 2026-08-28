@@ -478,6 +478,20 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 
 ---
 
+## Finding 24: Module 1 (Original Spec) -- No OOM at the Expected Batch Size, a Missing Eval-Loss Blind Spot Caught Before Trusting the Run, and a Real Unrecoverable Session Loss
+
+**Real problem:** The curriculum's Module 1 (original spec) requires deliberately pushing an 8B-parameter QLoRA fine-tune to OOM on a free T4 (15GB VRAM) to find the real batch-size ceiling. Loaded `meta-llama/Llama-3.1-8B-Instruct` in 4-bit via Unsloth, attached LoRA adapters (r=16, all seven standard target modules, gradient checkpointing enabled), formatted all 756 records from `accepted_dataset.jsonl` (Module 1 rewritten's actual output) into Llama-3.1 chat-template text, and split 680 train / 76 eval.
+
+**Real investigation:** Ran `SFTTrainer` at a deliberately aggressive `per_device_train_batch_size=64` for 100 steps, expecting a traceback per the curriculum's own framing. It did not OOM -- training completed cleanly, loss falling from ~1.40 to ~0.85 over the run. Root cause, not luck: Module 1's own tokenizer audit (Finding 23) already established this corpus's real max token count is 221 against a configured `max_seq_length` of 512 -- far shorter than the curriculum's illustrative example assumes, so a batch of 64 short sequences never approached the VRAM ceiling a batch of 64 longer, more typical sequences would hit. Before treating the resulting adapter as a usable baseline, re-reading the actual `SFTConfig` surfaced a real, separate gap: `eval_dataset` was built and passed to the trainer, but `eval_strategy`/`eval_steps` were never set, so the 100-step run (`epoch: 9.09` -- roughly nine full passes over 680 records) produced zero eval-loss data points. That's exactly the blind spot the curriculum warns about ("loss curve looks great, validation perplexity gets worse") with no instrumentation in place to catch it -- the run's falling train loss was uninterpretable as evidence of real learning versus memorization of a small dataset over nine epochs.
+
+Attempted to reload a clean model to rerun with eval tracking fixed -- the reload cell failed with `NameError: name 'model' is not defined`. Confirmed via `!nvidia-smi` (0MiB used, zero running processes) and the Files panel (both `accepted_dataset.jsonl` and the entire `outputs/checkpoint-100/` directory gone) that this was a full Colab runtime disconnect, not a lost variable -- the free-tier session had reset entirely.
+
+**Real result:** The completed 100-step run and its checkpoint are unrecoverable. `SFTTrainer`'s checkpoint save had only ever written to local Colab disk (`outputs/`), never to a persistent location -- despite the trainer reporting a successful save at step 100, that checkpoint did not survive the disconnect. This is the curriculum's own checkpoint-resume warning ("if you don't checkpoint, you lose the run") occurring for real, on an unplanned schedule, immediately after the eval-instrumentation gap was caught -- not a staged demonstration.
+
+**Honest conclusion:** Two real findings, not one clean result: (1) the assumed batch-size-64 OOM did not occur, and the actual reason is traceable to a real, previously-established property of this specific dataset (short sequences), not a generic claim that T4s can handle large batches -- this would not generalize to a corpus with longer generated answers. (2) The decision to discard the completed run rather than trust it was correct independent of the subsequent disconnect -- a training run with no eval-loss signal across nine epochs on a small dataset cannot be distinguished from overfitting, and would have been a legitimate finding to report even if the session hadn't been lost. The disconnect is a costly but genuine confirmation of why persistent checkpointing (Google Drive, not local Colab disk) is non-negotiable before any further training, not merely a documented best practice -- this project now has direct, first-hand evidence of the failure mode it was supposed to prevent.
+
+---
+
 ## What this project demonstrates
 
 
@@ -505,6 +519,7 @@ The other three disagreements (human PASS, RAGAS FAIL) were checked the same way
 - Measuring, rather than assuming, that a third-party API parameter's real behavior matches its documented semantics — finding two of four tested configurations produced the opposite of their stated effect on the same provider and content, and only trusting the one setting verified consistent across repeated runs and real (not synthetic) input
 - Distrusting a suspiciously clean result on a small sample rather than accepting it, then confirming at full corpus scale that a validation mechanism catches real, distinct fabrication patterns rather than passing everything through uniformly — including one case where the validator correctly rejected a claim that appeared verbatim in the very output it was checking, evidence it verifies against the source rather than the generator's own confidence
 - Cross-verifying a computed result against an independent, separately-written analysis rather than trusting a single code path, and disclosing precisely which part of a design (a truncation/discard rule) was built and unit-tested but never actually exercised against real data, rather than presenting untested logic as proven
+- Catching a missing evaluation-instrumentation gap by re-reading a training config rather than trusting a falling loss curve, discarding a completed run on that basis alone -- then receiving direct, costly confirmation of why the underlying safeguard (persistent checkpointing) was necessary when the same run became permanently unrecoverable to an unrelated infrastructure failure moments later
 
 ---
 
