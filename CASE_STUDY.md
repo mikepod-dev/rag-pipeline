@@ -528,6 +528,21 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 28: A 796-Chunk Corpus Structurally Lacks Enough Near-Duplicate Content to Reliably Supply "High" Band (~0.8) RAFT Distractors
+
+**Real problem:** Module 2's RAFT distractor generation targets three cosine-similarity bands to the query (low ~0.3, mid ~0.6, high ~0.8), pulled from the full 796-chunk corpus after switching away from Qdrant top-K search (which was confirmed, via a 10-record test, to be structurally incapable of finding genuine low-similarity chunks -- see the design notes in `generate_raft_records.py`). Before running the full batch, a similarity-distribution check against 50 real records found golden chunks themselves cluster at 0.5-0.85 similarity to their own query (median 0.71) -- meaning a second, *different* chunk also near 0.8 similarity would require genuine near-duplicate topical content elsewhere in the corpus, which a diverse 16-document set may not reliably contain.
+
+**Real investigation:** Ran the full 756-record `accepted_dataset.jsonl` through the generator (all local numpy computation against the cached full corpus, no API calls) and measured per-band success and accuracy rather than trusting the aggregate "163 records missing a band" figure -- that number alone doesn't say which band, or how far off the ones that were "found" actually landed from their target.
+
+**Real result:** Sharp, consistent asymmetry across bands:
+- **Low (~0.3):** 0/756 missing (0%), mean delta from target 0.0091
+- **Mid (~0.6):** 45/756 missing (6.0%), mean delta from target 0.0174
+- **High (~0.8):** 163/756 missing (21.6%), and even the 593 that WERE found landed with a mean delta of 0.1154 -- roughly 6-12x worse than low or mid's accuracy.
+
+**Honest conclusion:** This is a real, structural property of a corpus this size and diversity, not a bug in the retrieval or banding logic -- confirmed by two things ruled out beforehand: the golden-chunk similarity check (explaining *why* few high-band matches would exist) and the full-corpus search switch (eliminating Qdrant's top-K bias as an alternative explanation, since that was already found and fixed as a separate, distinct problem). Records with a missing band were not dropped or backfilled with a worse approximation -- they were kept with fewer than 3 distractors and the gap explicitly logged in `bands_missing`, rather than silently disguised as a full band set. Whether the reduced density of genuinely hard (high-band) distractors meaningfully affects the eventual RAFT-trained adapter's discrimination ability is an open question this finding does not resolve -- it is deferred to the training/comparison stage, where it can be measured directly rather than assumed.
+
+---
+
 ## What this project demonstrates
 
 
@@ -556,6 +571,10 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 - Distrusting a suspiciously clean result on a small sample rather than accepting it, then confirming at full corpus scale that a validation mechanism catches real, distinct fabrication patterns rather than passing everything through uniformly — including one case where the validator correctly rejected a claim that appeared verbatim in the very output it was checking, evidence it verifies against the source rather than the generator's own confidence
 - Cross-verifying a computed result against an independent, separately-written analysis rather than trusting a single code path, and disclosing precisely which part of a design (a truncation/discard rule) was built and unit-tested but never actually exercised against real data, rather than presenting untested logic as proven
 - Catching a missing evaluation-instrumentation gap by re-reading a training config rather than trusting a falling loss curve, discarding a completed run on that basis alone -- then receiving direct, costly confirmation of why the underlying safeguard (persistent checkpointing) was necessary when the same run became permanently unrecoverable to an unrelated infrastructure failure moments later
+- Distrusting a training metric's best-scoring checkpoint by testing real generation output directly rather than accepting the metric as sufficient proof, uncovering that a teacher-forced loss minimum does not guarantee reliable free-running generation -- including a case of complete topic hallucination on a directly-trained example
+- Root-causing that metric/reality gap to a specific, fixable training configuration choice (prompt tokens included in the loss), correcting it with an isolated single-variable retrain, and honestly reporting that the fix changed the overfitting timeline rather than eliminating the need to think about it
+- Stopping a diagnostic effort after repeated, genuinely undiagnosable infrastructure failures and reporting the resulting precision limitation explicitly, rather than presenting an estimate obtained under those conditions as more exact than the evidence actually supports
+- Predicting a data-availability limitation from an earlier, unrelated measurement (golden-chunk similarity distribution) before it caused a problem, then confirming the prediction with precise per-band numbers at full scale rather than reporting a single aggregate "some records incomplete" figure that would have obscured which band and by how much
 
 ---
 
