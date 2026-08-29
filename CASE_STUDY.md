@@ -543,6 +543,18 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 29: The RAFT-Trained Adapter Crosses the Curriculum's Own Explicit False-Abstain Failure Threshold on Held-Out Data
+
+**Real problem:** Module 2's curriculum spec sets a precise, stated bar: *">10% false-abstain rate on clean data = failed run"* -- the model answering "I don't know" on questions it actually has the context to answer. Before trusting `raft_run1/checkpoint-22` (the epoch-1 eval-loss minimum from RAFT training on `raft_records.jsonl`, using the same recipe -- r=16, masked completion-only loss -- as Module 1's baseline checkpoint-22) as a usable adapter, its real generation behavior needed measuring against this threshold directly, not assumed from a good loss curve alone -- the exact mistake already caught once in Finding 25.
+
+**Real investigation:** An initial spot-check on 12 examples (2 hand-picked, then 10 more) looked encouraging, including correctly abstaining on the exact pet-guardian-law query that had caused checkpoint-77 to hallucinate fabricated legislation in Finding 25. Before drawing any conclusion, it was caught that these 12 examples were pulled directly from `raft_records` -- the full 756-record set -- rather than specifically from the 76-record held-out eval split the training run's loss curve was actually computed against. Testing on records the model may have directly trained on is not a real generalization check. The exact same 90/10 split (`seed=3407`) used during training was reproduced against the raw record list to identify the genuinely held-out subset before re-running the check.
+
+**Real result:** Against the 71 non-abstain held-out records, the model false-abstained (incorrectly claimed the context didn't contain an answer it actually had) on 8 -- an **11.3% false-abstain rate**, crossing the curriculum's stated >10% failure threshold. Against the 5 abstain held-out records (a small subsample, since only ~10% of the full 756-record set was converted to abstain examples and only 5 of those happened to land in this particular 76-record eval split), the model hallucinated an answer instead of correctly abstaining on 3 -- a 60% rate on this specific small sample, including inventing a plausible-sounding pharmacological explanation of caffeine/adenosine receptor binding with fabricated affinity values not present in any provided document.
+
+**Honest conclusion:** The false-abstain result (11.3%, n=71) is a real, adequately-powered measurement that meets the curriculum's own stated definition of a failed run -- not a borderline or ambiguous call. The abstain-hallucination result (60%, n=5) is directionally consistent with the same underlying problem (the model has not reliably learned to distinguish "answerable from context" from "not answerable"), but the sample is too small to trust as a precise rate; a different random split could plausibly have produced a very different number. Per the curriculum's own prescribed next step for this exact failure mode, the abstain examples likely need reweighting in the training mix (increasing `abstain_fraction` beyond the 10% used here, and/or reproducing a larger, held-out abstain-only evaluation set) before this checkpoint is trustworthy for further use -- this finding identifies the failure precisely rather than resolving it.
+
+---
+
 ## What this project demonstrates
 
 
@@ -575,6 +587,7 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 - Root-causing that metric/reality gap to a specific, fixable training configuration choice (prompt tokens included in the loss), correcting it with an isolated single-variable retrain, and honestly reporting that the fix changed the overfitting timeline rather than eliminating the need to think about it
 - Stopping a diagnostic effort after repeated, genuinely undiagnosable infrastructure failures and reporting the resulting precision limitation explicitly, rather than presenting an estimate obtained under those conditions as more exact than the evidence actually supports
 - Predicting a data-availability limitation from an earlier, unrelated measurement (golden-chunk similarity distribution) before it caused a problem, then confirming the prediction with precise per-band numbers at full scale rather than reporting a single aggregate "some records incomplete" figure that would have obscured which band and by how much
+- Catching a sampling error before drawing a conclusion from it -- an initial spot-check accidentally drew from training data rather than the genuinely held-out eval split -- then reproducing the exact same train/test split used during training to measure the real result, which crossed the curriculum's own stated numeric failure threshold rather than landing in a comfortable gray area
 
 ---
 
