@@ -4,6 +4,8 @@ ingestion_manifest.json
 synthetic_run_*.jsonl
 accepted_dataset.jsonl
 quarantine_dataset.jsonl
+raft_records.jsonl
+raft_records_test*.jsonl
 __pycache__/
 *.pyc
 .pytest_cache/
