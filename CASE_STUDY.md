@@ -555,6 +555,18 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 30: Lowering the Abstain Fraction Changed the Loss Curve's Shape, But Real Validation Was Deferred by Compounding Infrastructure Limits
+
+**Real problem:** Finding 29 found the RAFT adapter trained with `abstain_fraction=0.10` crossed the curriculum's own stated >10% false-abstain failure threshold (11.3% measured on held-out data). Per the curriculum's prescribed remediation for this exact failure mode -- reweighting the abstain examples in the training mix -- a retrain was planned with `abstain_fraction` halved to 0.05, same recipe otherwise (r=16, masked completion-only loss, batch size 16 / gradient accumulation 2, already memory-verified safe against this GPU in the first RAFT run's smoke test).
+
+**Real investigation:** Regenerated the RAFT dataset with `--abstain-fraction 0.05` (37 abstain records vs. the original run's 75); confirmed the missing-band count (163/756) held identical to the prior run, verifying the change only affected abstain conversion and nothing else in the distractor-selection logic. Retrained on a fresh Colab session. The resulting loss curve had a materially different shape from the first RAFT run's near-immediate divergence: eval loss *improved* from epoch 1 to epoch 2 (0.330 -> 0.321) before rising at epoch 3 (0.353) -- one confirmed epoch of decline followed by one epoch of increase, not yet the curriculum's two-consecutive-increase overfitting criterion. Training was interrupted twice in succession: first by Colab's free-tier session-duration cap ("reached its maximum duration" -- a distinct, explicitly diagnosed cause, unlike the undiagnosed RAM-based crashes in Finding 27), then, upon attempting to reconnect, by GPU quota exhaustion blocking any further access for the remainder of the session.
+
+**Real result:** `checkpoint-44` (epoch 2, eval loss 0.321), saved via `save_strategy="epoch"` before the disconnect, is the best available candidate from this run. Whether epoch 2 is the genuine minimum, or epoch 3's rise was the start of real divergence that a 4th or 5th epoch would have confirmed, could not be determined -- the infrastructure failures arrived before a second data point past the rise was obtainable.
+
+**Honest conclusion:** This is real, but explicitly incomplete, evidence. The changed curve shape is consistent with the reduced abstain fraction addressing Finding 29's over-generalization problem, but consistency is not proof, and Finding 25 already demonstrated directly that a favorable loss curve alone does not guarantee good real generation behavior. The actual test -- rerunning the same false-abstain and hallucination-rate measurement methodology from Finding 29 against `checkpoint-44` -- has not yet been performed, and no claim that this retrain fixed the threshold failure can honestly be made until it is. This finding documents a real mid-validation checkpoint, not a resolved result, deferred by GPU quota exhaustion rather than any flaw in the approach itself.
+
+---
+
 ## What this project demonstrates
 
 
@@ -588,6 +600,7 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 - Stopping a diagnostic effort after repeated, genuinely undiagnosable infrastructure failures and reporting the resulting precision limitation explicitly, rather than presenting an estimate obtained under those conditions as more exact than the evidence actually supports
 - Predicting a data-availability limitation from an earlier, unrelated measurement (golden-chunk similarity distribution) before it caused a problem, then confirming the prediction with precise per-band numbers at full scale rather than reporting a single aggregate "some records incomplete" figure that would have obscured which band and by how much
 - Catching a sampling error before drawing a conclusion from it -- an initial spot-check accidentally drew from training data rather than the genuinely held-out eval split -- then reproducing the exact same train/test split used during training to measure the real result, which crossed the curriculum's own stated numeric failure threshold rather than landing in a comfortable gray area
+- Distinguishing a favorable trend from a proven fix -- a retrain's changed loss-curve shape was consistent with addressing a previously-identified failure, but was explicitly reported as unvalidated rather than claimed as resolved, after infrastructure limits (a diagnosed session-duration cap, then GPU quota exhaustion) prevented running the actual generation-quality test that would confirm it
 
 ---
 
