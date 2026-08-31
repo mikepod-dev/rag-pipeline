@@ -567,6 +567,18 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 31: Halving the Abstain Fraction Cut the False-Abstain Rate from 11.3% to 1.3%, Clearing the Curriculum's Threshold
+
+**Real problem:** Finding 30 left `checkpoint-44` (the `abstain_fraction=0.05` retrain's epoch-2 minimum) with a favorable but explicitly unvalidated loss curve -- the actual test, rerunning Finding 29's false-abstain and hallucination-rate measurement against real held-out generations, had been deferred by GPU quota exhaustion. That test needed to actually run before any claim of a fix could be made.
+
+**Real investigation:** Reloaded `checkpoint-44` fresh in a clean session, reproduced the exact same held-out split (`seed=3407`) used during training, and ran the identical methodology from Finding 29 against it: greedy decoding, real generated output compared against real targets, non-abstain and abstain cases measured separately.
+
+**Real result:** The held-out split yielded 75 non-abstain and 1 abstain record (the abstain count dropped from 5 in Finding 29's split to 1 here, a direct, expected consequence of `abstain_fraction` itself dropping from 10% to 5% -- fewer abstain records exist in the corpus to be sampled into any given split). Non-abstain false-abstain rate: **1/75 (1.3%)**, down from Finding 29's 8/71 (11.3%) -- a real, comparably-sized-sample result, not a statistical fluke, and now comfortably under the curriculum's >10% failure threshold. The single abstain record hallucinated a plausible but fabricated claim about cat grooming behavior rather than correctly abstaining -- a real, specific failure worth recording, but explicitly not treated as a "rate" given n=1 carries no statistical weight.
+
+**Honest conclusion:** The primary problem Finding 29 identified -- the model over-generalizing "context doesn't contain the answer" onto questions it could actually answer -- is measurably fixed by this retrain, confirmed against real generation behavior rather than assumed from a loss curve, directly addressing the exact gap Finding 25 first exposed between teacher-forced loss and real quality. The abstain-hallucination side of the problem remains genuinely unresolved: this checkpoint has not been shown to correctly abstain when it should, only shown to not incorrectly abstain when it shouldn't -- these are different failure modes, and reducing abstain training data's weight, while fixing one, provides no evidence about the other. A proper abstain-hallucination measurement would require either a larger held-out abstain sample (not available from this particular 5%-fraction dataset and split) or a dedicated evaluation set built specifically for that question.
+
+---
+
 ## What this project demonstrates
 
 
@@ -601,6 +613,7 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 - Predicting a data-availability limitation from an earlier, unrelated measurement (golden-chunk similarity distribution) before it caused a problem, then confirming the prediction with precise per-band numbers at full scale rather than reporting a single aggregate "some records incomplete" figure that would have obscured which band and by how much
 - Catching a sampling error before drawing a conclusion from it -- an initial spot-check accidentally drew from training data rather than the genuinely held-out eval split -- then reproducing the exact same train/test split used during training to measure the real result, which crossed the curriculum's own stated numeric failure threshold rather than landing in a comfortable gray area
 - Distinguishing a favorable trend from a proven fix -- a retrain's changed loss-curve shape was consistent with addressing a previously-identified failure, but was explicitly reported as unvalidated rather than claimed as resolved, after infrastructure limits (a diagnosed session-duration cap, then GPU quota exhaustion) prevented running the actual generation-quality test that would confirm it
+- Confirming a deferred fix with the same measurement methodology used to find the original problem, on a comparably-sized real sample, rather than accepting a favorable trend as sufficient proof -- then explicitly separating two related but distinct failure modes (false-abstaining vs. hallucinating-instead-of-abstaining) rather than treating a fix to one as evidence about the other when the second could not be measured with statistical confidence from the available sample
 
 ---
 
