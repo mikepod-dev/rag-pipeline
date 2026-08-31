@@ -5,6 +5,9 @@ synthetic_run_*.jsonl
 accepted_dataset.jsonl
 quarantine_dataset.jsonl
 raft_records*.jsonl
+baseline_generations.json
+raft_generations.json
+comparison_results.jsonl
 __pycache__/
 *.pyc
 .pytest_cache/
