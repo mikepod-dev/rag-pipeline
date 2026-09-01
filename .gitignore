@@ -8,6 +8,10 @@ raft_records*.jsonl
 baseline_generations.json
 raft_generations.json
 comparison_results.jsonl
+gate_run_results.jsonl
+golden_dataset_v*.jsonl
+pending_review_v*.jsonl
+review_log_v*.jsonl
 __pycache__/
 *.pyc
 .pytest_cache/
