@@ -12,6 +12,7 @@ gate_run_results.jsonl
 golden_dataset_v*.jsonl
 pending_review_v*.jsonl
 review_log_v*.jsonl
+clumping_report.json
 __pycache__/
 *.pyc
 .pytest_cache/
