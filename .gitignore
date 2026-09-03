@@ -23,3 +23,5 @@ __pycache__/
 geometry_scaling_results.jsonl
 
 hnsw_recall_report.json
+
+load_test_report.json
