@@ -1,4 +1,4 @@
-﻿# Building and Debugging a Production-Minded RAG Pipeline
+# Building and Debugging a Production-Minded RAG Pipeline
 ### A case study in retrieval failures, evaluation discipline, and knowing when to reject your own feature
 
 ---
@@ -628,6 +628,17 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 **Honest conclusion:** The worker's dependency footprint cannot be slimmed by dropping ML libraries (it does real local inference, not just orchestration), but it can be slimmed significantly by dropping unused GPU support -- a fix that also applies to the existing API image, which had the identical unnecessary CUDA bloat undiscovered until this session. The `docker-compose.yml` multi-container topology (Redis + API + worker) now genuinely works locally, but only after fixing two real bugs neither the original Tier-1 Dockerfile nor `celery_app.py` had ever been forced to confront: a credential-leaking `COPY . .` with no `.dockerignore`, and an SSL config with no non-TLS code path. Both were latent for the entire project history and only surfaced because this was the first time anyone actually tried local-Redis containerized testing rather than always running against Upstash directly. The real 118s cold-start figure is a genuine input for later hosting decisions -- relevant to whether a target platform's free tier scales to zero between requests, since that would make the cold-start cost recurring rather than one-time.
 
 ---
+## Finding 36: Module 2 -- Finding 34's O(n^2) Memory Formula Converges to Real Measurements Within 5% by n=12,000, But This Development Machine Cannot Reach the Range Where the Wall Was Projected to Bite
+
+**Real problem:** Finding 34 projected the geometry watchdog's O(n^2) memory wall (~20GB at 50,000 chunks, ~80GB at 100,000) purely by extrapolating from real measured compute time at the original 796-chunk corpus size -- the memory formula itself (`n^2 * 8` bytes for a float64 similarity matrix) was theoretical, never checked against real measured RSS at any size larger than 796. Before trusting that extrapolation further, the real next step was to actually measure it.
+
+**Real investigation:** Built `benchmark_geometry_scaling.py`, replicating `geometry_watchdog.py`'s exact computation (normalize, then a single matmul to the full n x n cosine similarity matrix) against synthetic random unit vectors at the real embedder's dimensionality (384, matching `all-MiniLM-L6-v2`), run as a separate process per size so RSS measurements start from a clean baseline each time. Measured real process RSS via `psutil` at four sizes: n=1,000, 5,000, 10,000, and 12,000. Attempting to reach n=50,000 (Finding 34's own projected ~20GB point) immediately ran into a real, concrete constraint: this development machine has only 15.9GB total RAM, and free memory fluctuated between 1.2-3.1GB depending on what else was running (Chrome, Docker Desktop/WSL2, Windows Memory Compression, background antivirus) -- none of which could be freed further mid-session, since Chrome was the active interface being used for this work. n=12,000 (~1.2GB real) was the largest size safely reachable with genuine headroom against a 1.6-2GB free-memory ceiling.
+
+**Real result:** The theoretical formula underestimates badly at small n (1.71x actual vs. theoretical at n=1,000: 13.7MB real vs. 8.0MB theoretical) but converges fast as fixed Python/numpy overhead amortizes out -- 1.13x at n=5,000, 1.06x at n=10,000, 1.05x at n=12,000 (1,208MB real vs. 1,152MB theoretical). The formula is a good predictor once past small-n noise, supporting Finding 34's original projection methodology. Compute time also scaled consistent with O(n^2) across all four points (0.03s to 1.90s). Separately, and arguably the more load-bearing finding: this specific 15.9GB-RAM development machine could not safely test anywhere close to the 50,000-100,000 chunk range Finding 34 projected the wall at -- reaching even n=12,000 required actively freeing memory (stopping Docker Desktop, shutting down WSL2) and accepting real risk of swapping or a crash.
+
+**Honest conclusion:** Finding 34's memory-wall projection holds up under real measurement at the sizes actually testable on this hardware, but the range where the wall itself becomes binding (50K-100K chunks) remains unverified by direct local measurement -- not because the extrapolation is doubted, but because ordinary development hardware cannot reach that range to check it, which is itself real evidence for how close to the edge this brute-force approach already runs at far smaller scales. This also reframes Module 2's original "investigate whether Qdrant's HNSW indexing could replace brute-force" question: it is not a nice-to-have optimization for some hypothetical future 100K-chunk corpus, but a near-term necessity, since the brute-force approach's actual memory ceiling on typical hardware sits well below the range where a growing real corpus would plausibly need it. That HNSW-vs-brute-force accuracy/recall tradeoff investigation remains open and unstarted.
+
+---
 ## What this project demonstrates
 
 
@@ -672,4 +683,5 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 ## Stack
 
 Python Â· ChromaDB Â· `sentence-transformers` (bi-encoder + cross-encoder) Â· `rank-bm25` Â· OpenRouter (Claude Haiku) Â· git
+
 

@@ -19,3 +19,5 @@ __pycache__/
 .ruff_cache/
 .streamlit/
 *.egg-info/
+
+geometry_scaling_results.jsonl
