@@ -16,11 +16,12 @@ celery_app = Celery(
     include=["pipeline"],
 )
 
-celery_app.conf.broker_use_ssl = {
-    "ssl_cert_reqs": ssl.CERT_REQUIRED,
-    "ssl_ca_certs": certifi.where(),
-}
-celery_app.conf.redis_backend_use_ssl = {
-    "ssl_cert_reqs": ssl.CERT_REQUIRED,
-    "ssl_ca_certs": certifi.where(),
-}
+if redis_url and redis_url.startswith("rediss://"):
+    celery_app.conf.broker_use_ssl = {
+        "ssl_cert_reqs": ssl.CERT_REQUIRED,
+        "ssl_ca_certs": certifi.where(),
+    }
+    celery_app.conf.redis_backend_use_ssl = {
+        "ssl_cert_reqs": ssl.CERT_REQUIRED,
+        "ssl_ca_certs": certifi.where(),
+    }
