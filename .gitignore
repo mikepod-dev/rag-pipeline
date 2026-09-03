@@ -21,3 +21,5 @@ __pycache__/
 *.egg-info/
 
 geometry_scaling_results.jsonl
+
+hnsw_recall_report.json
