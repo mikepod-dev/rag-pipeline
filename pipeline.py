@@ -239,24 +239,39 @@ def get_reranker():
         return reranker
 
 
-def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
+def hybrid_search(query, tenant_id, n_results=2, max_per_source=3, prefetch_limit=50):
+    """tenant_id is required -- pass None explicitly for internal/eval use
+    (no tenant filter applied). Real API requests always carry a real tenant_id."""
     initialize()
     models = globals()["_qmodels"]
 
     query_embedding = model.encode(query).tolist()
 
+    tenant_filter = None
+    if tenant_id is not None:
+        tenant_filter = models.Filter(
+            must=[models.FieldCondition(key="tenant_id", match=models.MatchValue(value=tenant_id))]
+        )
+
     results = client.query_points(
         collection_name=collection_name,
         prefetch=[
-            models.Prefetch(query=query_embedding, using="dense", limit=prefetch_limit),
+            models.Prefetch(
+                query=query_embedding,
+                using="dense",
+                limit=prefetch_limit,
+                filter=tenant_filter,
+            ),
             models.Prefetch(
                 query=models.Document(text=query, model="Qdrant/bm25"),
                 using="sparse",
                 limit=prefetch_limit,
+                filter=tenant_filter,
             ),
         ],
         query=models.FusionQuery(fusion=models.Fusion.RRF),
         limit=prefetch_limit,
+        query_filter=tenant_filter,
     )
 
     source_counts = {}
@@ -275,8 +290,10 @@ def hybrid_search(query, n_results=2, max_per_source=3, prefetch_limit=50):
     return {"documents": [documents], "metadatas": [metadatas]}
 
 
-def hybrid_search_with_rerank(query, n_candidates=25, n_final=2, max_per_source=3):
-    wide_results = hybrid_search(query, n_results=n_candidates, max_per_source=max_per_source)
+def hybrid_search_with_rerank(query, tenant_id, n_candidates=25, n_final=2, max_per_source=3):
+    wide_results = hybrid_search(
+        query, tenant_id, n_results=n_candidates, max_per_source=max_per_source
+    )
     candidates = wide_results["documents"][0]
     candidate_sources = wide_results["metadatas"][0]
 
@@ -349,9 +366,10 @@ Question: {question}"""
     return answer_text, call_cost
 
 
-def log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count):
+def log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count, tenant_id):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
+        "tenant_id": tenant_id,
         "question": question,
         "answer": answer,
         "cost": cost,
@@ -420,7 +438,7 @@ def agentic_answer(question, max_retries=2):
 
 
 @celery_app.task(name="pipeline.answer_question_task")
-def answer_question_task(question):
+def answer_question_task(question, tenant_id):
     start = time.time()
     success = True
     answer = None
@@ -428,7 +446,7 @@ def answer_question_task(question):
     retrieval_count = 0
 
     try:
-        results = hybrid_search_with_rerank(question)
+        results = hybrid_search_with_rerank(question, tenant_id)
         retrieved_texts = results["documents"][0]
         retrieval_count = len(retrieved_texts)
         answer, cost = ask_llm(question, retrieved_texts)
@@ -437,9 +455,9 @@ def answer_question_task(question):
         raise
     finally:
         latency_ms = (time.time() - start) * 1000
-        log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count)
+        log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count, tenant_id)
 
-    return {"question": question, "answer": answer}
+    return {"question": question, "answer": answer, "tenant_id": tenant_id}
 
 
 if __name__ == "__main__":

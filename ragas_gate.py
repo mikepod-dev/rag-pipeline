@@ -185,7 +185,7 @@ def backfill_context(question: str, n_final: int = 5) -> list[str]:
     """
     from pipeline import hybrid_search_with_rerank
 
-    result = hybrid_search_with_rerank(question, n_final=n_final)
+    result = hybrid_search_with_rerank(question, tenant_id=None, n_final=n_final)
     return result["documents"][0]
 
 

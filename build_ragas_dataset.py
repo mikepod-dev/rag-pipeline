@@ -11,7 +11,7 @@ for i, item in enumerate(original_data):
     question = item["question"]
     answer = item["answer"]
 
-    retrieved = hybrid_search_with_rerank(question)
+    retrieved = hybrid_search_with_rerank(question, tenant_id=None)
     contexts = retrieved["documents"][0]
 
     ragas_dataset.append(

@@ -91,7 +91,7 @@ Does the actual answer's CONTENT match what's expected? Reply with ONLY one word
 results_log = []
 
 for case in eval_set:
-    results = hybrid_search_with_rerank(case["question"])
+    results = hybrid_search_with_rerank(case["question"], tenant_id=None)
 
     top_source = results["metadatas"][0][0]["source"]
     retrieved_texts = results["documents"][0]

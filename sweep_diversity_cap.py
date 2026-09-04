@@ -12,7 +12,9 @@ def run_retrieval_sweep(cap_values=[1, 2, 3, 4, 5, 999]):
     for cap in cap_values:
         correct = 0
         for case in cases_with_source:
-            retrieved = hybrid_search_with_rerank(case["question"], max_per_source=cap)
+            retrieved = hybrid_search_with_rerank(
+                case["question"], tenant_id=None, max_per_source=cap
+            )
             sources = [m["source"] for m in retrieved["metadatas"][0]]
             if case["expected_source"] in sources:
                 correct += 1

@@ -10,6 +10,7 @@ app = FastAPI()
 
 class Question(BaseModel):
     query: str
+    tenant_id: str
 
 
 @app.get("/")
@@ -23,7 +24,7 @@ def ask(q: Question):
     if not is_valid:
         return {"error": error}
 
-    task = answer_question_task.delay(q.query)
+    task = answer_question_task.delay(q.query, q.tenant_id)
     return {"task_id": task.id, "status": "processing"}
 
 
@@ -39,6 +40,11 @@ def get_result(task_id: str):
 
     if task_result.state == "SUCCESS":
         result = task_result.result
-        return {"status": "complete", "question": result["question"], "answer": result["answer"]}
+        return {
+            "status": "complete",
+            "question": result["question"],
+            "answer": result["answer"],
+            "tenant_id": result.get("tenant_id"),
+        }
 
     return {"status": task_result.state.lower()}
