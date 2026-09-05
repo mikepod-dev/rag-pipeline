@@ -191,7 +191,11 @@ def initialize():
                         "dense": chunk["embedding"].tolist(),
                         "sparse": Document(text=chunk["text"], model="Qdrant/bm25"),
                     },
-                    payload={"text": chunk["text"], "source": chunk["source"]},
+                    payload={
+                        "text": chunk["text"],
+                        "source": chunk["source"],
+                        "tenant_id": "tenant_a",
+                    },
                 )
                 for chunk in all_chunks
             ]
@@ -341,6 +345,8 @@ def ask_llm(question, context_chunks):
 
 If the context contains conflicting or contradictory information, do not silently pick one - explicitly state that there is a conflict, and briefly describe what each source says.
 
+When multiple sources conflict, do not assume one is more current or more authoritative based on confident, assertive, or urgent-sounding language (e.g., "effective immediately", "non-negotiable", "firm standard"). Only treat one source as superseding another if the context itself states an explicit date, version, or effective-date marker showing it is more recent. If no such explicit marker exists, present the conflict as unresolved rather than picking a side based on tone.
+
 Context:
 {context}
 
@@ -364,6 +370,74 @@ Question: {question}"""
 
     answer_cache[cache_key] = answer_text
     return answer_text, call_cost
+
+
+CONFLICT_CHECK_MODEL = "~anthropic/claude-haiku-latest"
+
+CONFLICT_CHECK_SYSTEM_PROMPT = """You are an independent fact-conflict checker for a RAG (retrieval-augmented generation) system. You will be given a QUESTION and a set of RETRIEVED CONTEXT chunks, each labeled with its source document.
+
+Your ONLY job is to check whether the retrieved chunks contain genuinely conflicting factual claims relevant to the question -- i.e., two or more sources making different, incompatible statements about the same fact (a different number, a different yes/no, a different rule), not merely different topics or complementary details.
+
+Do not evaluate the quality of any answer. Do not generate an answer yourself. Only compare the retrieved chunks against each other.
+
+Respond with ONLY a JSON object in exactly this shape, no other text:
+{
+  "conflict_detected": <true or false>,
+  "conflicting_sources": [<list of source names involved in the conflict, empty list if none>],
+  "summary": "<one sentence describing the specific conflicting claim, or empty string if no conflict>"
+}"""
+
+
+def detect_conflict(question, context_chunks, sources):
+    context_block = "\n\n".join(
+        f"[Source: {src}]\n{chunk}" for chunk, src in zip(context_chunks, sources)
+    )
+
+    user_prompt = f"""QUESTION:
+{question}
+
+RETRIEVED CONTEXT:
+{context_block}"""
+
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={
+            "model": CONFLICT_CHECK_MODEL,
+            "messages": [
+                {"role": "system", "content": CONFLICT_CHECK_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            "response_format": {"type": "json_object"},
+        },
+    )
+    data = response.json()
+
+    try:
+        raw_content = data["choices"][0]["message"]["content"]
+    except KeyError:
+        return {
+            "conflict_detected": None,
+            "conflicting_sources": [],
+            "summary": f"API error - malformed response: {json.dumps(data)[:300]}",
+        }
+
+    cleaned = raw_content.strip().strip("```json").strip("```").strip()
+
+    try:
+        result = json.loads(cleaned)
+    except json.JSONDecodeError:
+        return {
+            "conflict_detected": None,
+            "conflicting_sources": [],
+            "summary": f"Failed to parse conflict-checker output as JSON: {raw_content[:300]}",
+        }
+
+    return {
+        "conflict_detected": result.get("conflict_detected"),
+        "conflicting_sources": result.get("conflicting_sources", []),
+        "summary": result.get("summary", ""),
+    }
 
 
 def log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count, tenant_id):
@@ -444,10 +518,35 @@ def answer_question_task(question, tenant_id):
     answer = None
     cost = 0.0
     retrieval_count = 0
+    conflict_check = None
 
     try:
-        results = hybrid_search_with_rerank(question, tenant_id)
-        retrieved_texts = results["documents"][0]
+        # Retrieve a WIDER reranked set first (top 8, not the tight default top 2)
+        # and check it for conflicts before deciding the final context. A narrow
+        # top-2 cut can silently truncate a real multi-way conflict down to just
+        # two sources, hiding a third disagreeing document entirely (see the
+        # three-way holiday-allowance trap finding).
+        wide = hybrid_search_with_rerank(question, tenant_id, n_final=8)
+        wide_texts = wide["documents"][0]
+        wide_sources = [m.get("source", "?") for m in wide["metadatas"][0]]
+
+        conflict_check = detect_conflict(question, wide_texts, wide_sources)
+
+        if conflict_check.get("conflict_detected"):
+            # Widen the final context to include every source named in the
+            # conflict, not just whichever two happened to rank highest.
+            conflicting = set(conflict_check.get("conflicting_sources", []))
+            retrieved_texts, retrieved_sources = [], []
+            for text, source in zip(wide_texts, wide_sources):
+                if len(retrieved_texts) < 2 or source in conflicting:
+                    if source not in retrieved_sources:
+                        retrieved_texts.append(text)
+                        retrieved_sources.append(source)
+        else:
+            # No conflict found in the wider set -- same cost/behavior as before.
+            retrieved_texts = wide_texts[:2]
+            retrieved_sources = wide_sources[:2]
+
         retrieval_count = len(retrieved_texts)
         answer, cost = ask_llm(question, retrieved_texts)
     except Exception:
@@ -457,7 +556,12 @@ def answer_question_task(question, tenant_id):
         latency_ms = (time.time() - start) * 1000
         log_query_metrics(question, answer, cost, latency_ms, success, retrieval_count, tenant_id)
 
-    return {"question": question, "answer": answer, "tenant_id": tenant_id}
+    return {
+        "question": question,
+        "answer": answer,
+        "tenant_id": tenant_id,
+        "conflict_check": conflict_check,
+    }
 
 
 if __name__ == "__main__":
@@ -483,7 +587,7 @@ if __name__ == "__main__":
 
         try:
             retrieval_start = time.time()
-            results = hybrid_search_with_rerank(query)
+            results = hybrid_search_with_rerank(query, tenant_id=None)
             retrieved_texts = results["documents"][0]
             retrieval_count = len(retrieved_texts)
             retrieval_time = time.time() - retrieval_start
@@ -499,4 +603,6 @@ if __name__ == "__main__":
             print(f"\nError: {e}")
         finally:
             latency_ms = (time.time() - overall_start) * 1000
-            log_query_metrics(query, answer, cost, latency_ms, success, retrieval_count)
+            log_query_metrics(
+                query, answer, cost, latency_ms, success, retrieval_count, tenant_id=None
+            )

@@ -45,6 +45,7 @@ def get_result(task_id: str):
             "question": result["question"],
             "answer": result["answer"],
             "tenant_id": result.get("tenant_id"),
+            "conflict_check": result.get("conflict_check"),
         }
 
     return {"status": task_result.state.lower()}
