@@ -31,3 +31,5 @@ run_conflict_flag_test.py
 run_hard_conflict_traps_test.py
 verify_conflict_fixes.py
 conflict_baseline_transcript.txt
+
+run_bias_and_boundary_traps_test.py
