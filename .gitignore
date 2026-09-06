@@ -40,3 +40,5 @@ verify_threshold_fix.py
 run_multihop_test.py
 
 run_math_trap_test.py
+
+run_stale_document_test.py

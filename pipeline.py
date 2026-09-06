@@ -88,11 +88,12 @@ def validate_query(query):
     return True, None
 
 
-def initialize():
-    """Loads documents, computes embeddings, and connects to Qdrant.
-    Only runs once, and only when something actually needs it -
-    not on plain `import pipeline`."""
-    global docs, all_chunks, model, reranker, client, _initialized
+def _ensure_setup():
+    """Genuinely one-time, expensive setup: load the embedding model, connect
+    to Qdrant, ensure the collection/index exist. Runs exactly once per
+    process -- safe to gate behind _initialized since none of this needs to
+    repeat."""
+    global model, client, _initialized
 
     if _initialized:
         return
@@ -102,14 +103,47 @@ def initialize():
             return
 
         from qdrant_client import QdrantClient, models
-        from qdrant_client.models import (
-            Distance,
-            Document,
-            PointStruct,
-            SparseVectorParams,
-            VectorParams,
-        )
+        from qdrant_client.models import Distance, SparseVectorParams, VectorParams
         from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
+
+        if not client.collection_exists(collection_name):
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
+                sparse_vectors_config={"sparse": SparseVectorParams()},
+            )
+
+        client.create_payload_index(
+            collection_name=collection_name,
+            field_name="source",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+
+        # stash the models module reference for query-time use (Prefetch, FusionQuery, etc.)
+        globals()["_qmodels"] = models
+
+        _initialized = True
+
+
+def _sync_documents():
+    """Real delta-check against docs/, re-chunking and re-upserting ONLY
+    changed/removed documents. Deliberately NOT gated behind _initialized --
+    runs on EVERY call, so a long-running process (like the real production
+    Celery worker, which is initialized once and then handles many tasks
+    over its lifetime without restarting) actually notices a document
+    edited after its first query, instead of becoming permanently blind to
+    document changes for the rest of the process's lifetime (see the
+    stale-document trap finding). Guarded by _init_lock to prevent
+    concurrent worker threads from racing on the same manifest read/write."""
+    global docs, all_chunks
+
+    with _init_lock:
+        from qdrant_client.models import Document, PointStruct
+
+        models = globals()["_qmodels"]
 
         folder = "docs"
         manifest = load_manifest()
@@ -147,28 +181,12 @@ def initialize():
             f"Re-chunked {len(all_chunks)} chunks from {len(changed_sources)} changed document(s)"
         )
 
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-
         for chunk in all_chunks:
             embedding = model.encode(chunk["text"])
             chunk["embedding"] = embedding
         if all_chunks:
             print(f"Embedding length: {len(all_chunks[0]['embedding'])}")
 
-        client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
-
-        if not client.collection_exists(collection_name):
-            client.create_collection(
-                collection_name=collection_name,
-                vectors_config={"dense": VectorParams(size=384, distance=Distance.COSINE)},
-                sparse_vectors_config={"sparse": SparseVectorParams()},
-            )
-
-        client.create_payload_index(
-            collection_name=collection_name,
-            field_name="source",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
         sources_to_clear = changed_sources + removed_sources
         if sources_to_clear:
             client.delete(
@@ -218,10 +236,14 @@ def initialize():
             del manifest[filename]
         save_manifest(manifest)
 
-        # stash the models module reference for query-time use (Prefetch, FusionQuery, etc.)
-        globals()["_qmodels"] = models
 
-        _initialized = True
+def initialize():
+    """Ensures one-time setup has run (_ensure_setup), then ALWAYS checks
+    docs/ for real changes (_sync_documents) -- see each function's
+    docstring for why these are split rather than both gated behind the
+    same one-time flag."""
+    _ensure_setup()
+    _sync_documents()
 
 
 def get_reranker():
@@ -345,12 +367,20 @@ answer_cache = {}
 def ask_llm(question, context_chunks):
     global total_cost, total_calls, cache_hits
 
-    cache_key = question.lower().strip()
+    # Cache key includes the actual retrieved context, not just the question
+    # text. A cache keyed on question text alone would keep serving a stale
+    # answer forever after a document changes and the same question is
+    # re-asked -- even though retrieval correctly returns fresh content
+    # (see the stale-document trap finding). Folding context into the key
+    # means a genuine content change naturally invalidates the cache,
+    # rather than relying on an arbitrary time-based expiry.
+    context = "\n\n".join(context_chunks)
+    cache_key = hashlib.sha256(
+        (question.lower().strip() + "||" + context).encode("utf-8")
+    ).hexdigest()
     if cache_key in answer_cache:
         cache_hits += 1
         return answer_cache[cache_key], 0.0
-
-    context = "\n\n".join(context_chunks)
 
     prompt = f"""Answer the question using ONLY the following context.
 
