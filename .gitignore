@@ -36,3 +36,5 @@ run_bias_and_boundary_traps_test.py
 
 run_empty_results_test.py
 verify_threshold_fix.py
+
+run_multihop_test.py
