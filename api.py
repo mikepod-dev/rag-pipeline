@@ -47,6 +47,7 @@ def get_result(task_id: str):
             "tenant_id": result.get("tenant_id"),
             "conflict_check": result.get("conflict_check"),
             "below_relevance_threshold": result.get("below_relevance_threshold"),
+            "injection_check": result.get("injection_check"),
         }
 
     return {"status": task_result.state.lower()}
