@@ -294,6 +294,16 @@ def hybrid_search(query, tenant_id, n_results=2, max_per_source=3, prefetch_limi
     return {"documents": [documents], "metadatas": [metadatas]}
 
 
+# Reasoned starting point, NOT statistically derived -- based on exactly two
+# real measurements: a known-relevant question's top reranker score (+10.02)
+# vs. a genuinely out-of-scope question's best score (-4.41). 0.0 is the
+# natural sign boundary for this cross-encoder's logit-style output and sits
+# with real margin on both sides of the two data points collected so far.
+# Needs recalibration against more real questions over time, the same way
+# monitor.py's thresholds (Finding 14) are disclosed as a starting point.
+RELEVANCE_THRESHOLD = 0.0
+
+
 def hybrid_search_with_rerank(query, tenant_id, n_candidates=25, n_final=2, max_per_source=3):
     wide_results = hybrid_search(
         query, tenant_id, n_results=n_candidates, max_per_source=max_per_source
@@ -311,6 +321,7 @@ def hybrid_search_with_rerank(query, tenant_id, n_candidates=25, n_final=2, max_
     return {
         "documents": [[doc for doc, src, score in top]],
         "metadatas": [[src for doc, src, score in top]],
+        "scores": [[float(score) for doc, src, score in top]],
     }
 
 
@@ -520,6 +531,8 @@ def answer_question_task(question, tenant_id):
     retrieval_count = 0
     conflict_check = None
 
+    below_relevance_threshold = False
+
     try:
         # Retrieve a WIDER reranked set first (top 8, not the tight default top 2)
         # and check it for conflicts before deciding the final context. A narrow
@@ -529,6 +542,39 @@ def answer_question_task(question, tenant_id):
         wide = hybrid_search_with_rerank(question, tenant_id, n_final=8)
         wide_texts = wide["documents"][0]
         wide_sources = [m.get("source", "?") for m in wide["metadatas"][0]]
+        wide_scores = wide["scores"][0]
+
+        top_score = wide_scores[0] if wide_scores else float("-inf")
+
+        if top_score < RELEVANCE_THRESHOLD:
+            # Real structural backstop: retrieval itself scored nothing as
+            # plausibly relevant. Skip the conflict check and the LLM call
+            # entirely rather than let generation attempt to make something
+            # of a genuinely irrelevant context -- both a real cost saving
+            # and a hard guarantee, not just hoping the prompt instruction
+            # catches it (see the empty-results trap finding).
+            below_relevance_threshold = True
+            answer = (
+                "No information relevant to this question was found in the " "available documents."
+            )
+            cost = 0.0
+            retrieval_count = 0
+            conflict_check = {
+                "conflict_detected": False,
+                "conflicting_sources": [],
+                "summary": "",
+            }
+            latency_ms = (time.time() - start) * 1000
+            log_query_metrics(
+                question, answer, cost, latency_ms, success, retrieval_count, tenant_id
+            )
+            return {
+                "question": question,
+                "answer": answer,
+                "tenant_id": tenant_id,
+                "conflict_check": conflict_check,
+                "below_relevance_threshold": below_relevance_threshold,
+            }
 
         conflict_check = detect_conflict(question, wide_texts, wide_sources)
 
@@ -561,6 +607,7 @@ def answer_question_task(question, tenant_id):
         "answer": answer,
         "tenant_id": tenant_id,
         "conflict_check": conflict_check,
+        "below_relevance_threshold": below_relevance_threshold,
     }
 
 
