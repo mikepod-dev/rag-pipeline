@@ -301,7 +301,7 @@ def hybrid_search(query, tenant_id, n_results=2, max_per_source=3, prefetch_limi
 # with real margin on both sides of the two data points collected so far.
 # Needs recalibration against more real questions over time, the same way
 # monitor.py's thresholds (Finding 14) are disclosed as a starting point.
-RELEVANCE_THRESHOLD = 0.0
+RELEVANCE_THRESHOLD = -4.0
 
 
 def hybrid_search_with_rerank(query, tenant_id, n_candidates=25, n_final=2, max_per_source=3):

@@ -38,3 +38,5 @@ run_empty_results_test.py
 verify_threshold_fix.py
 
 run_multihop_test.py
+
+run_math_trap_test.py

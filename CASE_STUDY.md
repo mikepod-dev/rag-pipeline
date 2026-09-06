@@ -732,6 +732,18 @@ Attempted to reload a clean model to rerun with eval tracking fixed -- the reloa
 
 ---
 
+## Finding 45: Precise Math Trap -- Arithmetic Was Flawless Both Times, But the Test Exposed a Real False Positive in Finding 43's Own Relevance-Threshold Fix, Which Was Then Recalibrated With New Evidence
+
+**Real problem:** RAG systems are generally known to be weaker at exact numbers and arithmetic than at general semantic meaning. Built a clean, self-contained test deliberately isolated from the conflict-resolution mechanic already tested in Findings 41-42: two new documents (offsite_budget.txt: $18,000; offsite_headcount.txt: 24 people), with no conflict or ambiguity, requiring genuine combination and arithmetic rather than single-fact lookup. Two questions: a straightforward division ($18,000 / 24 = $750), and a harder two-step calculation (a 10% budget increase, then divide by the same headcount = $825).
+
+**Real investigation:** The simple division question answered correctly and precisely: $750, shown with clear work. The two-step question did not fail on arithmetic -- it was blocked entirely, returning "No information relevant to this question was found," triggered by Finding 43's own relevance-threshold fix. Checked the real reranker score directly rather than guessing at the cause: -3.18, below the RELEVANCE_THRESHOLD of 0.0 set in Finding 43. This is a genuine false positive -- the correct source document was retrieved and available, but its reranker score for this specific, conditionally-phrased question ("If the budget increases by 10% next year...") fell below the cutoff, even though the underlying content was fully sufficient to answer it.
+
+**Real result:** Compared this new real score against Finding 43's two original data points: a directly-phrased relevant question scored +10.02, and a genuinely out-of-scope question's best score was -4.41. The new false-positive case (-3.18) sits between these two, not colliding with either -- meaning a single threshold placed between -4.41 and -3.18 (chosen: -4.0, with real margin on both sides) correctly classifies all three real data points now available, where the original 0.0 threshold only correctly classified two of three. Recalibrated RELEVANCE_THRESHOLD from 0.0 to -4.0 and re-ran a full regression across all three known cases: the out-of-scope question still correctly blocks, the simple-division question is unaffected, and the two-step question now correctly answers -- with all arithmetic shown correctly ($18,000 x 1.10 = $19,800; $19,800 / 24 = $825) and an appropriate, honest caveat that the 10% increase is a hypothetical from the question, not a fact the source document confirms.
+
+**Honest conclusion:** The system's arithmetic itself was flawless in both tests -- this trap's original hypothesis (weak exact math) was not confirmed. The real, more valuable finding was unplanned: a structural fix built in Finding 43 to solve one problem (confidently answering from irrelevant context) introduced a new, real failure mode (blocking a genuinely answerable question phrased conditionally rather than directly) that only surfaced under a different kind of real test. This is exactly the recalibration Finding 43's own honest conclusion predicted would be needed "as more varied questions are tested against it" -- now backed by a third real data point rather than the original two. The threshold is still disclosed as a reasoned, evidence-based value, not a permanently solved one; a fourth real test case could still reveal another boundary problem, and this should be treated as an ongoing calibration process, not a closed question.
+
+---
+
 ## What this project demonstrates
 
 
